@@ -90,6 +90,23 @@ export default function AspirePlayground() {
     return null;
   });
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aspire-playground-theme');
+      return (saved === 'light' ? 'light' : 'dark');
+    }
+    return 'dark';
+  });
+
+  const toggleTheme = useCallback(() => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
+
+  // Apply theme to document and persist
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('aspire-playground-theme', theme);
+  }, [theme]);
 
   // Save preferences to localStorage
   useEffect(() => {
@@ -520,6 +537,8 @@ export default function AspirePlayground() {
         onAddResource={handleAddResource}
         isCollapsed={isPaletteCollapsed}
         onToggleCollapse={() => setIsPaletteCollapsed(!isPaletteCollapsed)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Center: React Flow Canvas */}
@@ -750,7 +769,7 @@ export default function AspirePlayground() {
           <div
             style={{
               position: 'absolute',
-              bottom: '120px',
+              bottom: '160px',
               left: '12px',
               zIndex: 100,
               background: 'rgba(30, 30, 35, 0.95)',
@@ -950,6 +969,7 @@ export default function AspirePlayground() {
         }}
         currentFile={currentFile}
         onSetCurrentFile={handleSetCurrentFile}
+        theme={theme}
       />
 
       {/* Configuration Panel */}

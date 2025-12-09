@@ -26,11 +26,12 @@ interface CodePreviewProps {
   onLoadCanvas?: (nodes: Node<AspireNodeData>[], edges: Edge[]) => void;
   currentFile: string | null;
   onSetCurrentFile: (name: string | null) => void;
+  theme: 'dark' | 'light';
 }
 
 type Tab = 'apphost' | 'packages' | 'deploy' | 'validation' | 'files';
 
-export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile }: CodePreviewProps) {
+export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme }: CodePreviewProps) {
   const [activeTab, setActiveTab] = useState<Tab>('apphost');
   const [isResizing, setIsResizing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -38,6 +39,10 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [expandedWidth, setExpandedWidth] = useState(width);
   const [highlightedCode, setHighlightedCode] = useState<string>('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
+  // Responsive breakpoint for hamburger menu
+  const COMPACT_WIDTH = 580;
   
   // File management state
   const [savedFiles, setSavedFiles] = useState<AppHostFile[]>([]);
@@ -59,13 +64,6 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     }
     return false;
   });
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('aspire-playground-theme');
-      return (saved === 'light' ? 'light' : 'dark');
-    }
-    return 'dark';
-  });
 
   const COLLAPSED_WIDTH = 48;
   const DEFAULT_EXPANDED_WIDTH = 520;
@@ -85,16 +83,6 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   useEffect(() => {
     localStorage.setItem('aspire-playground-storage-warning-dismissed', storageWarningDismissed.toString());
   }, [storageWarningDismissed]);
-
-  // Apply theme to document and persist
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('aspire-playground-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
 
   // Initialize Shiki highlighter
   useEffect(() => {
@@ -160,25 +148,6 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
       onResize(COLLAPSED_WIDTH);
       setIsCollapsed(true);
     }
-  };
-
-  const handleCopy = async () => {
-    let textToCopy = '';
-    switch (activeTab) {
-      case 'apphost':
-        textToCopy = generatedCode.appHost;
-        break;
-      case 'packages':
-        textToCopy = generatedCode.nugetPackages.join('\n');
-        break;
-      case 'deploy':
-        textToCopy = generatedCode.deploymentOptions.join('\n');
-        break;
-    }
-
-    await navigator.clipboard.writeText(textToCopy);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSaveFile = () => {
@@ -279,35 +248,177 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const renderContent = () => {
     switch (activeTab) {
       case 'apphost':
-        return highlightedCode ? (
-          <div
-            style={{
-              margin: 0,
-              overflow: 'auto',
-              height: '100%',
-            }}
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
-          />
-        ) : (
-          <pre
-            style={{
-              margin: 0,
-              padding: '16px',
-              fontSize: '16px',
-              lineHeight: '1.6',
-              fontFamily: 'var(--sl-font-mono)',
-              color: 'var(--sl-color-white)',
-              overflow: 'auto',
-              height: '100%',
-            }}
-          >
-            {generatedCode.appHost}
-          </pre>
+        return (
+          <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Copy button */}
+            <button
+              onClick={async () => {
+                await navigator.clipboard.writeText(generatedCode.appHost);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                padding: '6px 10px',
+                fontSize: '12px',
+                background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
+                color: 'var(--sl-color-white)',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 500,
+                transition: 'all 0.2s',
+                zIndex: 10,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+              onMouseEnter={(e) => {
+                if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+              }}
+              onMouseLeave={(e) => {
+                if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+              }}
+              title="Copy code"
+            >
+              {copied ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Copied
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+            {highlightedCode ? (
+              <div
+                style={{
+                  margin: 0,
+                  overflow: 'auto',
+                  flex: 1,
+                  userSelect: 'text',
+                  WebkitUserSelect: 'text',
+                }}
+                dangerouslySetInnerHTML={{ __html: highlightedCode }}
+              />
+            ) : (
+              <pre
+                style={{
+                  margin: 0,
+                  padding: '16px',
+                  fontSize: '16px',
+                  lineHeight: '1.6',
+                  fontFamily: 'var(--sl-font-mono)',
+                  color: 'var(--sl-color-white)',
+                  overflow: 'auto',
+                  flex: 1,
+                  userSelect: 'text',
+                  WebkitUserSelect: 'text',
+                }}
+              >
+                {generatedCode.appHost}
+              </pre>
+            )}
+            
+            {/* Instructions */}
+            <div
+              style={{
+                padding: '16px',
+                background: 'var(--sl-color-gray-6)',
+                borderTop: '1px solid var(--sl-color-gray-5)',
+                fontSize: '13px',
+                lineHeight: '1.6',
+                color: 'var(--sl-color-gray-2)',
+                flexShrink: 0,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <span style={{ fontSize: '16px', flexShrink: 0 }}>💡</span>
+                <div>
+                  <strong style={{ color: 'var(--sl-color-white)', fontWeight: 600 }}>Note:</strong> This is generated code for your <code style={{ 
+                    background: 'var(--sl-color-gray-5)', 
+                    padding: '2px 6px', 
+                    borderRadius: '4px',
+                    fontFamily: 'var(--sl-font-mono)',
+                    fontSize: '12px',
+                  }}>AppHost.cs</code> file. Project paths (e.g., <code style={{ 
+                    background: 'var(--sl-color-gray-5)', 
+                    padding: '2px 6px', 
+                    borderRadius: '4px',
+                    fontFamily: 'var(--sl-font-mono)',
+                    fontSize: '12px',
+                  }}>../MyProject</code>) are expected to exist on disk relative to your AppHost project once your solution is set up.
+                </div>
+              </div>
+            </div>
+          </div>
         );
 
       case 'packages':
         return (
-          <div style={{ padding: '20px' }}>
+          <div style={{ padding: '20px', position: 'relative' }}>
+            {/* Copy button */}
+            {generatedCode.nugetPackages.length > 0 && (
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(generatedCode.nugetPackages.join('\n'));
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Copy all packages"
+              >
+                {copied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    Copy All
+                  </>
+                )}
+              </button>
+            )}
             <h3 style={{
               margin: '0 0 16px 0',
               fontSize: '15px',
@@ -326,12 +437,13 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                 No additional packages required for your current configuration.
               </p>
             ) : (
-              <ul style={{ margin: 0, padding: '0 0 0 20px', fontSize: '15px', lineHeight: '1.8' }}>
+              <ul style={{ margin: 0, padding: 0, fontSize: '15px', lineHeight: '1.8', listStyle: 'none' }}>
                 {generatedCode.nugetPackages.map((pkg, index) => {
                   const packageName = pkg.split('@')[0];
                   const nugetUrl = `https://www.nuget.org/packages/${packageName}`;
                   return (
-                    <li key={index} style={{ marginBottom: '8px' }}>
+                    <li key={index} style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '14px' }}>📦</span>
                       <a
                         href={nugetUrl}
                         target="_blank"
@@ -1007,197 +1119,393 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              position: 'relative',
             }}
           >
-            {/* All Tabs */}
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setActiveTab('apphost')}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  background: activeTab === 'apphost' ? 'var(--sl-color-gray-5)' : 'transparent',
-                  color: activeTab === 'apphost' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
-                  <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
-                </svg>
-                AppHost.cs
-              </button>
-              <button
-                onClick={() => setActiveTab('packages')}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  background: activeTab === 'packages' ? 'var(--sl-color-gray-5)' : 'transparent',
-                  color: activeTab === 'packages' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                }}
-              >
-                📦 Packages
-              </button>
-              <button
-                onClick={() => setActiveTab('deploy')}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  background: activeTab === 'deploy' ? 'var(--sl-color-gray-5)' : 'transparent',
-                  color: activeTab === 'deploy' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                }}
-              >
-                🚀 Deploy
-              </button>
-              <button
-                onClick={() => setActiveTab('validation')}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  background: activeTab === 'validation' ? 'var(--sl-color-gray-5)' : 'transparent',
-                  color: activeTab === 'validation' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                }}
-              >
-                ✅ Validation
-                {validationIssues.length > 0 && (
-                  <span style={{
-                    background: errorCount > 0 ? '#DC2626' : '#F59E0B',
-                    color: 'white',
-                    fontSize: '10px',
-                    padding: '1px 5px',
-                    borderRadius: '10px',
-                    fontWeight: 600,
-                  }}>
-                    {validationIssues.length}
+            {/* Compact Mode: Hamburger Menu */}
+            {width < COMPACT_WIDTH ? (
+              <div style={{ position: 'relative', width: '100%' }}>
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  style={{
+                    padding: '8px 12px',
+                    fontSize: '13px',
+                    background: 'var(--sl-color-gray-5)',
+                    color: 'var(--sl-color-white)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: '100%',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {activeTab === 'apphost' && (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
+                          <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
+                        </svg>
+                        AppHost.cs
+                      </>
+                    )}
+                    {activeTab === 'packages' && '📦 Packages'}
+                    {activeTab === 'deploy' && '🚀 Deploy'}
+                    {activeTab === 'validation' && (
+                      <>
+                        ✅ Validation
+                        {validationIssues.length > 0 && (
+                          <span style={{
+                            background: errorCount > 0 ? '#DC2626' : '#F59E0B',
+                            color: 'white',
+                            fontSize: '10px',
+                            padding: '1px 5px',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            marginLeft: '4px',
+                          }}>
+                            {validationIssues.length}
+                          </span>
+                        )}
+                      </>
+                    )}
+                    {activeTab === 'files' && (
+                      <>
+                        📁 Files
+                        {savedFiles.length > 0 && (
+                          <span style={{
+                            background: 'var(--sl-color-gray-4)',
+                            color: 'var(--sl-color-gray-2)',
+                            fontSize: '10px',
+                            padding: '1px 5px',
+                            borderRadius: '10px',
+                            fontWeight: 600,
+                            marginLeft: '4px',
+                          }}>
+                            {savedFiles.length}
+                          </span>
+                        )}
+                      </>
+                    )}
                   </span>
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('files')}
-                style={{
-                  padding: '6px 10px',
-                  fontSize: '13px',
-                  background: activeTab === 'files' ? 'var(--sl-color-gray-5)' : 'transparent',
-                  color: activeTab === 'files' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                }}
-              >
-                📁 Files
-                {savedFiles.length > 0 && (
-                  <span style={{
-                    background: 'var(--sl-color-gray-4)',
-                    color: 'var(--sl-color-gray-2)',
-                    fontSize: '10px',
-                    padding: '1px 5px',
-                    borderRadius: '10px',
-                    fontWeight: 600,
-                  }}>
-                    {savedFiles.length}
-                  </span>
-                )}
-              </button>
-            </div>
+                  <svg 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    style={{
+                      transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                    }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
 
-            {(activeTab === 'apphost' || activeTab === 'packages') && (
-              <button
-                onClick={handleCopy}
-                style={{
-                  padding: '5px 10px',
-                  fontSize: '11px',
-                  background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
-                  color: 'var(--sl-color-white)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  marginLeft: '8px',
-                  flexShrink: 0,
-                }}
-              >
-                {copied ? '✓ Copied' : 'Copy'}
-              </button>
+                {/* Dropdown Menu */}
+                {isMenuOpen && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: '4px',
+                      background: 'var(--sl-color-gray-6)',
+                      border: '1px solid var(--sl-color-gray-5)',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                      zIndex: 100,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <button
+                      onClick={() => { setActiveTab('apphost'); setIsMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        background: activeTab === 'apphost' ? 'var(--sl-color-gray-5)' : 'transparent',
+                        color: activeTab === 'apphost' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab !== 'apphost') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab !== 'apphost') e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
+                        <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
+                      </svg>
+                      AppHost.cs
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('packages'); setIsMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        background: activeTab === 'packages' ? 'var(--sl-color-gray-5)' : 'transparent',
+                        color: activeTab === 'packages' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab !== 'packages') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab !== 'packages') e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      📦 Packages
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('deploy'); setIsMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        background: activeTab === 'deploy' ? 'var(--sl-color-gray-5)' : 'transparent',
+                        color: activeTab === 'deploy' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab !== 'deploy') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab !== 'deploy') e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      🚀 Deploy
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('validation'); setIsMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        background: activeTab === 'validation' ? 'var(--sl-color-gray-5)' : 'transparent',
+                        color: activeTab === 'validation' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab !== 'validation') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab !== 'validation') e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      ✅ Validation
+                      {validationIssues.length > 0 && (
+                        <span style={{
+                          background: errorCount > 0 ? '#DC2626' : '#F59E0B',
+                          color: 'white',
+                          fontSize: '10px',
+                          padding: '1px 5px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                        }}>
+                          {validationIssues.length}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab('files'); setIsMenuOpen(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        fontSize: '13px',
+                        background: activeTab === 'files' ? 'var(--sl-color-gray-5)' : 'transparent',
+                        color: activeTab === 'files' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 500,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        textAlign: 'left',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab !== 'files') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab !== 'files') e.currentTarget.style.background = 'transparent';
+                      }}
+                    >
+                      📁 Files
+                      {savedFiles.length > 0 && (
+                        <span style={{
+                          background: 'var(--sl-color-gray-4)',
+                          color: 'var(--sl-color-gray-2)',
+                          fontSize: '10px',
+                          padding: '1px 5px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                        }}>
+                          {savedFiles.length}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Wide Mode: All Tabs Visible */
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setActiveTab('apphost')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    background: activeTab === 'apphost' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'apphost' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
+                    <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
+                  </svg>
+                  AppHost.cs
+                </button>
+                <button
+                  onClick={() => setActiveTab('packages')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    background: activeTab === 'packages' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'packages' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  📦 Packages
+                </button>
+                <button
+                  onClick={() => setActiveTab('deploy')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    background: activeTab === 'deploy' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'deploy' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  🚀 Deploy
+                </button>
+                <button
+                  onClick={() => setActiveTab('validation')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    background: activeTab === 'validation' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'validation' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  ✅ Validation
+                  {validationIssues.length > 0 && (
+                    <span style={{
+                      background: errorCount > 0 ? '#DC2626' : '#F59E0B',
+                      color: 'white',
+                      fontSize: '10px',
+                      padding: '1px 5px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                    }}>
+                      {validationIssues.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => setActiveTab('files')}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '13px',
+                    background: activeTab === 'files' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'files' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  📁 Files
+                  {savedFiles.length > 0 && (
+                    <span style={{
+                      background: 'var(--sl-color-gray-4)',
+                      color: 'var(--sl-color-gray-2)',
+                      fontSize: '10px',
+                      padding: '1px 5px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                    }}>
+                      {savedFiles.length}
+                    </span>
+                  )}
+                </button>
+              </div>
             )}
-            
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              style={{
-                padding: '6px',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                marginLeft: '8px',
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-              }}
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              )}
-            </button>
           </div>
 
           {/* Content */}
@@ -1206,6 +1514,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               flex: 1,
               overflow: 'auto',
               background: 'var(--sl-color-gray-7)',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
             }}
           >
             {renderContent()}
