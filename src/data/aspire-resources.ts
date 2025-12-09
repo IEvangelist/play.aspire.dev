@@ -52,7 +52,7 @@ export const aspireResources: AspireResource[] = [
   // Projects
   {
     id: 'dotnet-project',
-    name: 'dotnet-project',
+    name: 'apiservice',
     displayName: 'C# Project',
     category: 'project',
     icon: csharpIcon,
@@ -65,7 +65,7 @@ export const aspireResources: AspireResource[] = [
   },
   {
     id: 'node-app',
-    name: 'node-app',
+    name: 'nodeapp',
     displayName: 'Node.js App',
     category: 'project',
     icon: nodejsIcon,
@@ -79,7 +79,7 @@ export const aspireResources: AspireResource[] = [
   },
   {
     id: 'vite-app',
-    name: 'vite-app',
+    name: 'frontend',
     displayName: 'Vite App',
     category: 'project',
     icon: reactIcon,
@@ -93,7 +93,7 @@ export const aspireResources: AspireResource[] = [
   },
   {
     id: 'python-app',
-    name: 'python-app',
+    name: 'pythonapp',
     displayName: 'Python App',
     category: 'project',
     icon: pythonIcon,
