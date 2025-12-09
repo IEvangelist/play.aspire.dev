@@ -56,10 +56,10 @@ export default function AspirePlayground() {
       if (saved) return parseInt(saved, 10);
       // Default based on screen size - wider to avoid horizontal scroll
       if (window.innerWidth <= 768) return window.innerWidth;
-      if (window.innerWidth <= 1200) return 550;
-      return 520; // Wider default for better code viewing
+      if (window.innerWidth <= 1200) return 580;
+      return 650; // Wide enough to avoid horizontal scrollbar for typical code
     }
-    return 520;
+    return 650;
   });
   
   const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(() => {
