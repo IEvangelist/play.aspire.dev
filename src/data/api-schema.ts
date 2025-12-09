@@ -1192,7 +1192,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithHttpsEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('ProjectResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project', 'container'],
   },
 
   'node-app': {
@@ -1243,7 +1243,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('NodeAppResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project', 'container'],
   },
 
   'vite-app': {
@@ -1284,7 +1284,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('ViteAppResource'),
-    canConnectTo: ['project', 'ai'], // Vite apps typically connect to APIs, not databases directly
+    canConnectTo: ['project', 'ai', 'container'], // Vite apps typically connect to APIs, not databases directly
   },
 
   'python-app': {
@@ -1334,7 +1334,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('PythonAppResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project', 'container'],
   },
 
   container: {
