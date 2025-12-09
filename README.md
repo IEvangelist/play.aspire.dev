@@ -1,6 +1,6 @@
 # Aspire Playground
 
-A visual designer for [.NET Aspire](https://learn.microsoft.com/dotnet/aspire/) distributed applications. Build your cloud-native architectures by dragging and dropping resources, then export production-ready C# code.
+A visual designer for [Aspire](https://aspire.dev) distributed applications. Build your cloud-native architectures by dragging and dropping resources, then export production-ready `AppHost.cs` code.
 
 [![Build and Validate](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml/badge.svg)](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml)
 
@@ -66,7 +66,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) to start designing.
+Open [http://localhost:4321](http://localhost:4321) to start designing.
 
 ### Build for Production
 
@@ -99,9 +99,9 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Resources
 
-- [.NET Aspire Documentation](https://learn.microsoft.com/dotnet/aspire/)
-- [Aspire Samples](https://github.com/dotnet/aspire-samples)
 - [aspire.dev](https://aspire.dev)
+- [Aspire](https://github.com/dotnet/aspire)
+- [Aspire Samples](https://github.com/dotnet/aspire-samples)
 
 ## License
 
