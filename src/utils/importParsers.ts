@@ -147,24 +147,11 @@ export function parseAppHost(content: string): ImportResult {
     }
   }
 
-  // Pattern 3: .WithReference(resourceVar)
-  const referencePattern = /(\w+)(?:\s*\n\s*)?\.WithReference\s*\(\s*(\w+)\s*\)/g;
-  
-  while ((match = referencePattern.exec(content)) !== null) {
-    const [, sourceVar, targetVar] = match;
-    const sourceNodeId = resourceMap.get(sourceVar);
-    const targetNodeId = resourceMap.get(targetVar);
-    
-    if (sourceNodeId && targetNodeId && sourceNodeId !== targetNodeId) {
-      edges.push({
-        id: `edge_${sourceNodeId}_${targetNodeId}`,
-        source: sourceNodeId,
-        target: targetNodeId,
-        animated: true,
-        style: { stroke: '#888', strokeWidth: 2 },
-      });
-    }
-  }
+  // Pattern 3: Find .WithReference(resourceVar) calls
+  // TODO: Implement parsing of chained .WithReference() calls
+  // This would handle cases like:
+  //   var api = builder.AddProject<Projects.Api>("api")
+  //       .WithReference(database);
 
   if (nodes.length === 0) {
     warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* patterns.');

@@ -26,6 +26,7 @@ import ConfirmDialog from './ConfirmDialog';
 import ImportModal, { type ImportType } from './ImportModal';
 import { generateAppHostCode } from '../../utils/codeGenerator';
 import { parseAppHost, parseDockerCompose, parseDockerfile } from '../../utils/importParsers';
+import { getAppHostFromUrl, encodeAppHost, createSvgUrl } from '../../utils/urlEncoding';
 import type { AspireResource } from '../../data/aspire-resources';
 import type { Template } from '../../data/templates';
 import {
@@ -146,6 +147,31 @@ export default function AspirePlayground() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Load from URL if there's a shared apphost parameter
+  const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
+  
+  useEffect(() => {
+    if (hasLoadedFromUrl) return;
+    
+    const sharedAppHost = getAppHostFromUrl();
+    if (sharedAppHost) {
+      try {
+        const result = parseAppHost(sharedAppHost);
+        if (result.nodes.length > 0) {
+          setNodes(result.nodes);
+          setEdges(result.edges);
+          if (result.warnings.length > 0) {
+            setImportWarnings(result.warnings);
+            setTimeout(() => setImportWarnings([]), 5000);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load shared AppHost:', error);
+      }
+      setHasLoadedFromUrl(true);
+    }
+  }, [hasLoadedFromUrl, setNodes, setEdges]);
+
   // Track shift key state for snap-to-connected-nodes feature
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -231,6 +257,32 @@ export default function AspirePlayground() {
   const generatedCode = useMemo(() => {
     return generateAppHostCode(nodes, edges);
   }, [nodes, edges]);
+
+  // Share functionality
+  const handleShare = useCallback(() => {
+    const encoded = encodeAppHost(generatedCode.appHost);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?apphost=${encoded}`;
+    
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      setSaveMessage('Share link copied!');
+      setTimeout(() => setSaveMessage(null), 2000);
+    }).catch(() => {
+      // Fallback: show the URL in a prompt
+      prompt('Share this URL:', shareUrl);
+    });
+  }, [generatedCode.appHost]);
+
+  // Get SVG URL for embedding
+  const handleGetSvgUrl = useCallback(() => {
+    const svgUrl = createSvgUrl(generatedCode.appHost);
+    
+    navigator.clipboard.writeText(svgUrl).then(() => {
+      setSaveMessage('SVG URL copied!');
+      setTimeout(() => setSaveMessage(null), 2000);
+    }).catch(() => {
+      prompt('SVG URL:', svgUrl);
+    });
+  }, [generatedCode.appHost]);
 
   // Handle save to current file
   const handleSaveToFile = useCallback(() => {
@@ -733,6 +785,60 @@ export default function AspirePlayground() {
             title="Toggle keyboard shortcuts"
           >
             ⌨️ Shortcuts
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={nodes.length === 0}
+            style={{
+              padding: '8px 16px',
+              fontSize: '13px',
+              background: 'var(--sl-color-blue-high)',
+              color: 'var(--sl-color-white)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 500,
+              transition: 'all 0.2s',
+              opacity: nodes.length === 0 ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (nodes.length > 0) {
+                e.currentTarget.style.background = 'var(--sl-color-blue)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--sl-color-blue-high)';
+            }}
+            title="Copy shareable URL to clipboard"
+          >
+            🔗 Share
+          </button>
+          <button
+            onClick={handleGetSvgUrl}
+            disabled={nodes.length === 0}
+            style={{
+              padding: '8px 16px',
+              fontSize: '13px',
+              background: 'var(--sl-color-gray-5)',
+              color: 'var(--sl-color-white)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+              fontWeight: 500,
+              transition: 'all 0.2s',
+              opacity: nodes.length === 0 ? 0.5 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (nodes.length > 0) {
+                e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+            }}
+            title="Copy SVG embed URL to clipboard"
+          >
+            🖼️ SVG
           </button>
         </div>
 

@@ -28,6 +28,8 @@
     --sl-color-accent-high: #c6c2f2;
     --sl-color-accent-low: #231d41;
     --sl-color-green-high: #10B981;
+    --sl-color-blue: #3B82F6;
+    --sl-color-blue-high: #2563EB;
     
     /* Node-specific colors for dark theme */
     --sl-node-bg: #1a1a1a;
