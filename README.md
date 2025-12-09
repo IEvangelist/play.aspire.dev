@@ -2,7 +2,7 @@
 
 A visual designer for [Aspire](https://aspire.dev) distributed applications. Build your cloud-native architectures by dragging and dropping resources, then export production-ready `AppHost.cs` code.
 
-[![Build and Validate](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml/badge.svg)](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml)
+[![Build and Validate](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml/badge.svg)](https://github.com/IEvangelist/play.aspire.dev/actions/workflows/build.yml) [![Netlify Status](https://api.netlify.com/api/v1/badges/c054383e-cb6e-41e8-82ac-c716a75b3482/deploy-status)](https://app.netlify.com/projects/playaspiredev/deploys)
 
 ![Aspire Playground](./screenshots/playground.png)
 
