@@ -1,10 +1,15 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { AspireNodeData } from '../components/playground/AspireNode';
 
+export interface DeploymentCommand {
+  command: string;
+  docsUrl: string;
+}
+
 export interface GeneratedCode {
   appHost: string;
   nugetPackages: string[];
-  deploymentOptions: string[];
+  deploymentOptions: DeploymentCommand[];
   appSettings?: string;
   dockerfile?: string;
   azureManifest?: string;
@@ -250,12 +255,12 @@ ${resourceDeclarations.join('\n\n')}
 
 builder.Build().Run();`;
 
-  const deploymentOptions = [
-    'aspire run',
-    'aspire deploy',
-    'aspire deploy --environment staging',
-    'aspire do diagnostics',
-    'aspire do build',
+  const deploymentOptions: DeploymentCommand[] = [
+    { command: 'aspire run', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-run/' },
+    { command: 'aspire publish', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-publish/' },
+    { command: 'aspire deploy', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-deploy/' },
+    { command: 'aspire deploy --environment staging', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-deploy/' },
+    { command: 'aspire do build', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-do/' },
   ];
 
   // Generate appsettings.json

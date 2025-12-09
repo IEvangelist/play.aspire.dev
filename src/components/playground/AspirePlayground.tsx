@@ -23,7 +23,9 @@ import CodePreview from './CodePreview';
 import ConfigPanel from './ConfigPanel';
 import TemplateGallery from './TemplateGallery';
 import ConfirmDialog from './ConfirmDialog';
+import ImportModal, { type ImportType } from './ImportModal';
 import { generateAppHostCode } from '../../utils/codeGenerator';
+import { parseAppHost, parseDockerCompose, parseDockerfile } from '../../utils/importParsers';
 import type { AspireResource } from '../../data/aspire-resources';
 import type { Template } from '../../data/templates';
 import {
@@ -75,6 +77,8 @@ export default function AspirePlayground() {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [copiedNodes, setCopiedNodes] = useState<Node<AspireNodeData>[]>([]);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [clearCanvasConfirm, setClearCanvasConfirm] = useState(false);
   const [showKeyboardLegend, setShowKeyboardLegend] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -497,29 +501,55 @@ export default function AspirePlayground() {
   };
 
   const handleImport = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-          if (data.nodes && data.edges) {
-            setNodes(data.nodes);
-            setEdges(data.edges);
-          }
-        } catch (error) {
-          alert('Invalid file format');
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
+    setShowImportModal(true);
   };
+
+  const handleImportFile = useCallback((type: ImportType, content: string, fileName: string) => {
+    let result: ReturnType<typeof parseAppHost>;
+    
+    try {
+      switch (type) {
+        case 'apphost':
+          result = parseAppHost(content);
+          break;
+        case 'docker-compose':
+          result = parseDockerCompose(content);
+          break;
+        case 'dockerfile':
+          result = parseDockerfile(content, fileName);
+          break;
+        default:
+          return;
+      }
+
+      if (result.nodes.length > 0) {
+        // If there are existing nodes, ask for confirmation
+        if (nodes.length > 0) {
+          if (!confirm('This will add imported resources to your canvas. Continue?')) {
+            return;
+          }
+        }
+        
+        // Add imported nodes and edges to existing ones
+        const importedNodes = result.nodes;
+        const importedEdges = result.edges;
+        setNodes((nds) => [...nds, ...importedNodes]);
+        setEdges((eds) => [...eds, ...importedEdges]);
+        
+        if (result.warnings.length > 0) {
+          setImportWarnings(result.warnings);
+          // Auto-clear warnings after 5 seconds
+          setTimeout(() => setImportWarnings([]), 5000);
+        }
+      } else {
+        alert('No resources could be imported from the file. ' + 
+          (result.warnings.length > 0 ? result.warnings.join(' ') : ''));
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to parse the file. Please make sure it is a valid file.');
+    }
+  }, [nodes.length, setNodes, setEdges]);
 
   const handleApplyTemplate = (template: Template) => {
     if (nodes.length > 0 && !confirm('This will replace your current canvas. Continue?')) {
@@ -987,6 +1017,73 @@ export default function AspirePlayground() {
           onApplyTemplate={handleApplyTemplate}
           onClose={() => setShowTemplateGallery(false)}
         />
+      )}
+
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImport={handleImportFile}
+      />
+
+      {/* Import Warnings Toast */}
+      {importWarnings.length > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'var(--sl-color-gray-6)',
+            border: '1px solid var(--sl-color-accent)',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            zIndex: 1001,
+            maxWidth: '500px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+          }}
+        >
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}>
+            <div>
+              <div style={{ 
+                color: 'var(--sl-color-accent)', 
+                fontWeight: 600, 
+                marginBottom: '4px',
+                fontSize: '14px',
+              }}>
+                Import Notes
+              </div>
+              {importWarnings.map((warning, i) => (
+                <div key={i} style={{ 
+                  color: 'var(--sl-color-gray-2)', 
+                  fontSize: '13px',
+                  marginTop: '2px',
+                }}>
+                  • {warning}
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setImportWarnings([])}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--sl-color-gray-3)',
+                cursor: 'pointer',
+                fontSize: '18px',
+                padding: '0',
+                lineHeight: 1,
+              }}
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Clear Canvas Confirmation Dialog */}

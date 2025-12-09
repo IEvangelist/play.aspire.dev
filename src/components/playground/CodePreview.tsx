@@ -40,6 +40,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const [expandedWidth, setExpandedWidth] = useState(width);
   const [highlightedCode, setHighlightedCode] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCollapsedMenuOpen, setIsCollapsedMenuOpen] = useState(false);
+  const [menuButtonRect, setMenuButtonRect] = useState<DOMRect | null>(null);
   
   // Responsive breakpoint for hamburger menu
   const COMPACT_WIDTH = 580;
@@ -116,18 +118,34 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   useEffect(() => {
     if (!isResizing) return;
 
+    // Prevent text selection while resizing
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX;
       const maxWidth = Math.min(900, window.innerWidth * 0.6);
+      
+      // Allow resizing: minimum 300 when expanded, but allow any width when dragging from collapsed
       if (newWidth >= 300 && newWidth <= maxWidth) {
         onResize(newWidth);
         setExpandedWidth(newWidth);
         if (isCollapsed) setIsCollapsed(false);
+      } else if (isCollapsed && newWidth > COLLAPSED_WIDTH && newWidth <= maxWidth) {
+        // When collapsed, allow dragging to any width above collapsed width
+        onResize(newWidth);
+        if (newWidth >= 300) {
+          setExpandedWidth(newWidth);
+          setIsCollapsed(false);
+        }
       }
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
+      // Restore text selection
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -136,6 +154,9 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      // Restore text selection on cleanup
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
     };
   }, [isResizing, onResize, isCollapsed]);
 
@@ -505,17 +526,11 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               {generatedCode.deploymentOptions.map((option, index) => (
                 <div
                   key={index}
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(option);
-                    setCopiedDeployIndex(index);
-                    setTimeout(() => setCopiedDeployIndex(null), 2000);
-                  }}
                   style={{
                     padding: '12px 14px',
                     background: 'var(--sl-color-gray-6)',
                     borderRadius: '6px',
                     border: '1px solid var(--sl-color-gray-5)',
-                    cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -529,34 +544,91 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     e.currentTarget.style.background = 'var(--sl-color-gray-6)';
                     e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
                   }}
-                  title="Click to copy"
                 >
                   <code style={{
                     fontSize: '14px',
                     fontFamily: 'var(--sl-font-mono)',
                     color: 'var(--sl-color-accent-high)',
                   }}>
-                    {option}
+                    {option.command}
                   </code>
-                  {copiedDeployIndex === index ? (
-                    <span style={{ 
-                      color: 'var(--sl-color-accent)', 
-                      fontSize: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="20 6 9 17 4 12" />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* Docs link */}
+                    <a
+                      href={option.docsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        color: 'var(--sl-color-gray-3)',
+                        textDecoration: 'none',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = 'var(--sl-color-accent)';
+                        e.currentTarget.style.background = 'var(--sl-color-gray-6)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--sl-color-gray-3)';
+                        e.currentTarget.style.background = 'transparent';
+                      }}
+                      title="View CLI documentation"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
                       </svg>
-                      Copied
-                    </span>
-                  ) : (
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" style={{ opacity: 0.7 }}>
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  )}
+                    </a>
+                    {/* Copy button */}
+                    <button
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(option.command);
+                        setCopiedDeployIndex(index);
+                        setTimeout(() => setCopiedDeployIndex(null), 2000);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '4px',
+                        borderRadius: '4px',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: copiedDeployIndex === index ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-3)',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (copiedDeployIndex !== index) {
+                          e.currentTarget.style.color = 'var(--sl-color-accent)';
+                          e.currentTarget.style.background = 'var(--sl-color-gray-6)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (copiedDeployIndex !== index) {
+                          e.currentTarget.style.color = 'var(--sl-color-gray-3)';
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                      title="Copy command"
+                    >
+                      {copiedDeployIndex === index ? (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1024,6 +1096,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        overflow: 'hidden',
       }}
     >
       {/* Resize Handle */}
@@ -1074,6 +1147,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
             flexDirection: 'column',
             alignItems: 'center',
             paddingTop: '16px',
+            paddingLeft: '8px',
             gap: '12px',
           }}
         >
@@ -1099,6 +1173,215 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
+          
+          {/* Hamburger Menu for Tab Selection */}
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={(e) => {
+                setIsCollapsedMenuOpen(!isCollapsedMenuOpen);
+                // Store button position for dropdown
+                const rect = e.currentTarget.getBoundingClientRect();
+                setMenuButtonRect(rect);
+              }}
+              style={{
+                width: '32px',
+                height: '32px',
+                background: isCollapsedMenuOpen ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!isCollapsedMenuOpen) e.currentTarget.style.background = 'var(--sl-color-accent)';
+              }}
+              onMouseLeave={(e) => {
+                if (!isCollapsedMenuOpen) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+              }}
+              title="Select tab"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </button>
+            
+            {/* Dropdown Menu */}
+            {isCollapsedMenuOpen && menuButtonRect && (
+              <div
+                style={{
+                  position: 'fixed',
+                  top: menuButtonRect.top,
+                  left: menuButtonRect.left - 170,
+                  background: 'var(--sl-color-gray-6)',
+                  border: '1px solid var(--sl-color-gray-5)',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                  zIndex: 1000,
+                  overflow: 'hidden',
+                  minWidth: '160px',
+                }}
+              >
+                <button
+                  onClick={() => { setActiveTab('apphost'); setIsCollapsedMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    background: activeTab === 'apphost' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'apphost' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== 'apphost') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== 'apphost') e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
+                    <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
+                  </svg>
+                  AppHost.cs
+                </button>
+                <button
+                  onClick={() => { setActiveTab('packages'); setIsCollapsedMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    background: activeTab === 'packages' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'packages' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== 'packages') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== 'packages') e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  📦 Packages
+                </button>
+                <button
+                  onClick={() => { setActiveTab('deploy'); setIsCollapsedMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    background: activeTab === 'deploy' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'deploy' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== 'deploy') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== 'deploy') e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  🚀 Deploy
+                </button>
+                <button
+                  onClick={() => { setActiveTab('validation'); setIsCollapsedMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    background: activeTab === 'validation' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'validation' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== 'validation') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== 'validation') e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  ✅ Validation
+                  {validationIssues.length > 0 && (
+                    <span style={{
+                      background: errorCount > 0 ? '#DC2626' : '#F59E0B',
+                      color: 'white',
+                      fontSize: '10px',
+                      padding: '1px 5px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                    }}>
+                      {validationIssues.length}
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={() => { setActiveTab('files'); setIsCollapsedMenuOpen(false); }}
+                  style={{
+                    width: '100%',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    background: activeTab === 'files' ? 'var(--sl-color-gray-5)' : 'transparent',
+                    color: activeTab === 'files' ? 'var(--sl-color-white)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textAlign: 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (activeTab !== 'files') e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    if (activeTab !== 'files') e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  📁 Files
+                  {savedFiles.length > 0 && (
+                    <span style={{
+                      background: 'var(--sl-color-gray-4)',
+                      color: 'var(--sl-color-gray-2)',
+                      fontSize: '10px',
+                      padding: '1px 5px',
+                      borderRadius: '10px',
+                      fontWeight: 600,
+                    }}>
+                      {savedFiles.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+          
           <span style={{
             writingMode: 'vertical-rl',
             textOrientation: 'mixed',
@@ -1120,11 +1403,41 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               justifyContent: 'space-between',
               alignItems: 'center',
               position: 'relative',
+              gap: '8px',
             }}
           >
+            {/* Collapse Button */}
+            <button
+              onClick={handleDoubleClick}
+              style={{
+                width: '28px',
+                height: '28px',
+                background: 'transparent',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+              }}
+              title="Collapse panel"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+
             {/* Compact Mode: Hamburger Menu */}
             {width < COMPACT_WIDTH ? (
-              <div style={{ position: 'relative', width: '100%' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   style={{
@@ -1510,6 +1823,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
 
           {/* Content */}
           <div
+            key={activeTab}
             style={{
               flex: 1,
               overflow: 'auto',
@@ -1519,6 +1833,55 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
             }}
           >
             {renderContent()}
+          </div>
+
+          {/* Sticky Footer */}
+          <div
+            style={{
+              padding: '12px 20px',
+              borderTop: '1px solid var(--sl-color-gray-5)',
+              background: 'var(--sl-color-gray-7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0,
+            }}
+          >
+            <a
+              href="https://aspire.dev/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: '32px',
+                height: '32px',
+                background: 'transparent',
+                border: '1px solid var(--sl-color-gray-5)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+                textDecoration: 'none',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                e.currentTarget.style.borderColor = 'var(--sl-color-accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
+              }}
+              title="Visit aspire.dev"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </a>
+            <span style={{ fontSize: '11px', color: 'var(--sl-color-accent-high)' }}>
+              play.aspire.dev
+            </span>
           </div>
         </>
       )}
