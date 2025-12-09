@@ -1192,7 +1192,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithHttpsEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('ProjectResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
   },
 
   'node-app': {
@@ -1243,7 +1243,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('NodeAppResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
   },
 
   'vite-app': {
@@ -1334,7 +1334,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('PythonAppResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project'],
   },
 
   container: {
@@ -1382,7 +1382,7 @@ export const resourceApiDefinitions: Record<string, ResourceApiDefinition> = {
     },
     availableChainingMethods: ['WithReference', 'WaitFor', 'WithEnvironment', 'WithHttpEndpoint', 'WithHttpsEndpoint', 'WithBindMount', 'WithReplicas'],
     builderReturnType: createResourceBuilderType('ContainerResource'),
-    canConnectTo: ['database', 'cache', 'messaging', 'ai'],
+    canConnectTo: ['database', 'cache', 'messaging', 'ai', 'project', 'container'],
   },
 };
 

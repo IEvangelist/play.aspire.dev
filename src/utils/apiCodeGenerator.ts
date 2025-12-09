@@ -248,7 +248,7 @@ function generateNodeDeclaration(
   // Add database if applicable
   if (dbVarName && apiDef.childResourceMethods) {
     lines[lines.length - 1] += ';';
-    lines.push(`var ${dbVarName} = ${varName}.AddDatabase("${databaseName}")`);
+    lines.push(`\nvar ${dbVarName} = ${varName}.AddDatabase("${databaseName}")`);
   }
   
   // Generate reference methods
