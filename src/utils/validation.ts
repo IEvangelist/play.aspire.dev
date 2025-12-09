@@ -63,6 +63,8 @@ function mapCategory(category: string): ValidationIssue['category'] {
       return 'security';
     case 'performance':
       return 'performance';
+    case 'reliability':
+      return 'reliability';
     case 'api':
       return 'api';
     case 'semantic':
