@@ -1,5 +1,6 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { AspireNodeData } from '../components/playground/AspireNode';
+import { generateAppHostCodeFromSchema } from './apiCodeGenerator';
 
 export interface DeploymentCommand {
   command: string;
@@ -13,9 +14,32 @@ export interface GeneratedCode {
   appSettings?: string;
   dockerfile?: string;
   azureManifest?: string;
+  validationErrors?: string[];
 }
 
+/**
+ * Generates AppHost code using the API schema-based generator.
+ * This ensures that generated code is semantically correct and matches
+ * the actual Aspire API signatures.
+ * 
+ * Falls back to the legacy generator if the schema-based generator fails.
+ */
 export function generateAppHostCode(nodes: Node<AspireNodeData>[], edges: Edge[]): GeneratedCode {
+  // Use the new API schema-based generator
+  try {
+    return generateAppHostCodeFromSchema(nodes, edges);
+  } catch (error) {
+    // Fall back to legacy generator on error
+    console.warn('API schema-based generator failed, using legacy generator:', error);
+    return generateAppHostCodeLegacy(nodes, edges);
+  }
+}
+
+/**
+ * Legacy code generator for backward compatibility.
+ * @deprecated Use generateAppHostCodeFromSchema instead
+ */
+function generateAppHostCodeLegacy(nodes: Node<AspireNodeData>[], edges: Edge[]): GeneratedCode {
   const nugetPackages = new Set<string>();
   const resourceDeclarations: string[] = [];
 
