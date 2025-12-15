@@ -190,7 +190,7 @@ export default function AspirePlayground() {
     if (currentFile) {
       const savedFile = loadAppHostFile(currentFile);
       if (savedFile?.canvas) {
-        setNodes(savedFile.canvas.nodes);
+        setNodes(savedFile.canvas.nodes as Node<AspireNodeData>[]);
         setEdges(savedFile.canvas.edges);
       }
     }
