@@ -134,19 +134,22 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     const handleMouseMove = (e: MouseEvent) => {
       const newWidth = window.innerWidth - e.clientX;
       const maxWidth = Math.min(900, window.innerWidth * 0.6);
+      const minExpandedWidth = 300;
       
-      // Allow resizing: minimum 300 when expanded, but allow any width when dragging from collapsed
-      if (newWidth >= 300 && newWidth <= maxWidth) {
+      // When collapsed and user drags wider, immediately snap out of collapsed mode
+      if (isCollapsed && newWidth > COLLAPSED_WIDTH + 20) {
+        // Snap to minimum expanded width or the drag position, whichever is larger
+        const targetWidth = Math.max(minExpandedWidth, Math.min(newWidth, maxWidth));
+        onResize(targetWidth);
+        setExpandedWidth(targetWidth);
+        setIsCollapsed(false);
+      } else if (!isCollapsed && newWidth >= minExpandedWidth && newWidth <= maxWidth) {
+        // Normal resizing when expanded
         onResize(newWidth);
         setExpandedWidth(newWidth);
-        if (isCollapsed) setIsCollapsed(false);
-      } else if (isCollapsed && newWidth > COLLAPSED_WIDTH && newWidth <= maxWidth) {
-        // When collapsed, allow dragging to any width above collapsed width
+      } else if (!isCollapsed && newWidth < minExpandedWidth && newWidth > COLLAPSED_WIDTH) {
+        // Allow dragging smaller but maintain minimum when released
         onResize(newWidth);
-        if (newWidth >= 300) {
-          setExpandedWidth(newWidth);
-          setIsCollapsed(false);
-        }
       }
     };
 
@@ -155,6 +158,12 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
       // Restore text selection
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
+      
+      // Snap to minimum expanded width if released between collapsed and minimum
+      if (!isCollapsed && width < 300 && width > COLLAPSED_WIDTH) {
+        onResize(300);
+        setExpandedWidth(300);
+      }
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -167,7 +176,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
-  }, [isResizing, onResize, isCollapsed]);
+  }, [isResizing, onResize, isCollapsed, width]);
 
   const handleDoubleClick = () => {
     if (isCollapsed) {
