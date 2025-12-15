@@ -321,10 +321,10 @@ export const aspireResources: AspireResource[] = [
 ];
 
 export const resourceCategories = [
-  { id: 'project', name: 'Projects & Apps', icon: '💻', color: '#0078D4' },
+  { id: 'project', name: 'Apps', icon: '💻', color: '#0078D4' },
   { id: 'database', name: 'Databases', icon: '🗄️', color: '#107C10' },
   { id: 'cache', name: 'Caching', icon: '⚡', color: '#FFB900' },
   { id: 'messaging', name: 'Messaging', icon: '📬', color: '#E74856' },
-  { id: 'ai', name: 'AI & ML', icon: '🧠', color: '#00BCF2' },
+  { id: 'ai', name: 'AI', icon: '🧠', color: '#00BCF2' },
   { id: 'compute', name: 'Compute', icon: '🔧', color: '#8764B8' },
 ];

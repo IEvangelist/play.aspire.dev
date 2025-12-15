@@ -36,7 +36,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const [isResizing, setIsResizing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedDeployIndex, setCopiedDeployIndex] = useState<number | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [expandedWidth, setExpandedWidth] = useState(width);
   const [highlightedCode, setHighlightedCode] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -75,6 +75,15 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const errorCount = validationIssues.filter(i => i.severity === 'error').length;
   const warningCount = validationIssues.filter(i => i.severity === 'warning').length;
   const infoCount = validationIssues.filter(i => i.severity === 'info').length;
+
+  // Set collapsed width on mount if starting collapsed
+  useEffect(() => {
+    if (isCollapsed) {
+      onResize(COLLAPSED_WIDTH);
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load saved files on mount
   useEffect(() => {
@@ -241,6 +250,21 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     setRenameValue('');
   };
 
+  const handleDownloadFile = (name: string) => {
+    const file = loadAppHostFile(name);
+    if (file) {
+      const blob = new Blob([file.code], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${name}.cs`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const getSeverityIcon = (severity: ValidationIssue['severity']) => {
     switch (severity) {
       case 'error': return '❌';
@@ -271,56 +295,105 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
       case 'apphost':
         return (
           <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {/* Copy button */}
-            <button
-              onClick={async () => {
-                await navigator.clipboard.writeText(generatedCode.appHost);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
-              style={{
-                position: 'absolute',
-                top: '12px',
-                right: '12px',
-                padding: '6px 10px',
-                fontSize: '12px',
-                background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
-                color: 'var(--sl-color-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 500,
-                transition: 'all 0.2s',
-                zIndex: 10,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-              onMouseEnter={(e) => {
-                if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-              }}
-              onMouseLeave={(e) => {
-                if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-              }}
-              title="Copy code"
-            >
-              {copied ? (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Copied
-                </>
-              ) : (
-                <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                  Copy
-                </>
-              )}
-            </button>
+            {/* Action buttons container */}
+            <div style={{
+              position: 'absolute',
+              top: '12px',
+              right: '12px',
+              display: 'flex',
+              gap: '8px',
+              zIndex: 10,
+            }}>
+              {/* Download button */}
+              <button
+                onClick={() => {
+                  const fileName = currentFile || 'AppHost';
+                  const blob = new Blob([generatedCode.appHost], { type: 'text/plain;charset=utf-8' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${fileName}.cs`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Download code as .cs file"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                Download
+              </button>
+              {/* Copy button */}
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(generatedCode.appHost);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Copy code"
+              >
+                {copied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
             {highlightedCode ? (
               <div
                 style={{
@@ -1059,6 +1132,24 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                           </svg>
                         </button>
                         <button
+                          onClick={() => handleDownloadFile(file.name)}
+                          style={{
+                            padding: '6px',
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--sl-color-gray-3)',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                          }}
+                          title="Download"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                        </button>
+                        <button
                           onClick={() => handleDeleteFile(file.name)}
                           style={{
                             padding: '6px',
@@ -1097,6 +1188,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden',
+        zIndex: 5,
       }}
     >
       {/* Resize Handle */}

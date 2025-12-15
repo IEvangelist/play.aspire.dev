@@ -629,9 +629,8 @@ export default function AspirePlayground() {
         <div
           style={{
             position: 'absolute',
-            top: '16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
+            top: '6px',
+            left: '6px',
             zIndex: 4,
             display: 'flex',
             gap: '8px',
@@ -654,6 +653,7 @@ export default function AspirePlayground() {
               cursor: 'pointer',
               fontWeight: 600,
               transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-accent-high)';
@@ -661,8 +661,10 @@ export default function AspirePlayground() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-accent)';
             }}
+            title="Templates"
           >
-            📋 Templates
+            <span>📋</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
           </button>
           <button
             onClick={handleClearCanvas}
@@ -676,6 +678,7 @@ export default function AspirePlayground() {
               cursor: 'pointer',
               fontWeight: 500,
               transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -683,8 +686,10 @@ export default function AspirePlayground() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-5)';
             }}
+            title="Clear"
           >
-            🗑️ Clear
+            <span>🗑️</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Clear</span>
           </button>
           <button
             onClick={handleExport}
@@ -698,6 +703,7 @@ export default function AspirePlayground() {
               cursor: 'pointer',
               fontWeight: 500,
               transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -705,8 +711,10 @@ export default function AspirePlayground() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-5)';
             }}
+            title="Export"
           >
-            ⬆️ Export
+            <span>⬆️</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Export</span>
           </button>
           <button
             onClick={handleImport}
@@ -720,6 +728,7 @@ export default function AspirePlayground() {
               cursor: 'pointer',
               fontWeight: 500,
               transition: 'all 0.2s',
+              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -727,8 +736,10 @@ export default function AspirePlayground() {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-5)';
             }}
+            title="Import"
           >
-            ⬇️ Import
+            <span>⬇️</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Import</span>
           </button>
           {currentFile && (
             <button
@@ -754,9 +765,10 @@ export default function AspirePlayground() {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }
               }}
-              title={`Save changes to "${currentFile}"`}
+              title={saveMessage ? 'Saved' : `Save changes to "${currentFile}"`}
             >
-              {saveMessage ? '✓ Saved' : '💾 Save'}
+              <span>{saveMessage ? '✓' : '💾'}</span>
+              <span style={{ marginLeft: '6px' }} className="toolbar-text">{saveMessage ? 'Saved' : 'Save'}</span>
             </button>
           )}
           <button
@@ -784,7 +796,8 @@ export default function AspirePlayground() {
             }}
             title="Toggle keyboard shortcuts"
           >
-            ⌨️ Shortcuts
+            <span>⌨️</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Shortcuts</span>
           </button>
           <button
             onClick={handleShare}
@@ -811,7 +824,8 @@ export default function AspirePlayground() {
             }}
             title="Copy shareable URL to clipboard"
           >
-            🔗 Share
+            <span>🔗</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
           </button>
           <button
             onClick={handleGetSvgUrl}
@@ -838,7 +852,8 @@ export default function AspirePlayground() {
             }}
             title="Copy SVG embed URL to clipboard"
           >
-            🖼️ SVG
+            <span>🖼️</span>
+            <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
           </button>
         </div>
 
@@ -847,8 +862,8 @@ export default function AspirePlayground() {
           <div
             style={{
               position: 'absolute',
-              top: '16px',
-              right: '16px',
+              top: '6px',
+              right: '6px',
               zIndex: 4,
               background: 'var(--sl-color-gray-6)',
               padding: '8px 14px',
@@ -892,10 +907,18 @@ export default function AspirePlayground() {
           }}
         >
           <Background variant={BackgroundVariant.Dots} gap={20} size={2} color="#444" />
-          <Controls />
+          <Controls style={{
+            left: '6px',
+            bottom: '6px',
+            margin: '0',
+          }} />
           <MiniMap
             nodeColor={(node) => {
               return (node.data as any)?.color || '#888';
+            }}
+            style={{
+              right: '6px',
+              margin: '0',
             }}
           />
         </ReactFlow>
