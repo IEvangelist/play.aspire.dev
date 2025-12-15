@@ -850,62 +850,66 @@ export default function AspirePlayground() {
                 <span>⌨️</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Shortcuts</span>
               </button>
-              <button
-                onClick={handleShare}
-                disabled={nodes.length === 0}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  background: 'var(--sl-color-blue-high)',
-                  color: 'var(--sl-color-white)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  opacity: nodes.length === 0 ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (nodes.length > 0) {
-                    e.currentTarget.style.background = 'var(--sl-color-blue)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--sl-color-blue-high)';
-                }}
-                title="Copy shareable URL to clipboard"
-              >
-                <span>🔗</span>
-                <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
-              </button>
-              <button
-                onClick={handleGetSvgUrl}
-                disabled={nodes.length === 0}
-                style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  background: 'var(--sl-color-gray-5)',
-                  color: 'var(--sl-color-white)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
-                  fontWeight: 500,
-                  transition: 'all 0.2s',
-                  opacity: nodes.length === 0 ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => {
-                  if (nodes.length > 0) {
-                    e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-                }}
-                title="Copy SVG embed URL to clipboard"
-              >
-                <span>🖼️</span>
-                <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
-              </button>
+              {currentFile && (
+                <>
+                  <button
+                    onClick={handleShare}
+                    disabled={nodes.length === 0}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      background: 'var(--sl-color-blue-high)',
+                      color: 'var(--sl-color-white)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+                      fontWeight: 500,
+                      transition: 'all 0.2s',
+                      opacity: nodes.length === 0 ? 0.5 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (nodes.length > 0) {
+                        e.currentTarget.style.background = 'var(--sl-color-blue)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'var(--sl-color-blue-high)';
+                    }}
+                    title="Copy shareable URL to clipboard"
+                  >
+                    <span>🔗</span>
+                    <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
+                  </button>
+                  <button
+                    onClick={handleGetSvgUrl}
+                    disabled={nodes.length === 0}
+                    style={{
+                      padding: '8px 16px',
+                      fontSize: '13px',
+                      background: 'var(--sl-color-gray-5)',
+                      color: 'var(--sl-color-white)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+                      fontWeight: 500,
+                      transition: 'all 0.2s',
+                      opacity: nodes.length === 0 ? 0.5 : 1,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (nodes.length > 0) {
+                        e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                    }}
+                    title="Copy SVG embed URL to clipboard"
+                  >
+                    <span>🖼️</span>
+                    <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -981,8 +985,8 @@ export default function AspirePlayground() {
           <div
             style={{
               position: 'absolute',
-              bottom: '160px',
-              left: '12px',
+              bottom: '6px',
+              left: '38px',
               zIndex: 100,
               background: 'rgba(30, 30, 35, 0.95)',
               backdropFilter: 'blur(8px)',
