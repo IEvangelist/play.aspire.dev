@@ -651,7 +651,7 @@ export default function AspirePlayground() {
             borderRadius: '8px',
             border: '1px solid var(--sl-color-gray-5)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-            transition: 'all 0.2s ease-in-out',
+            transition: 'all 0.3s ease-in-out',
             overflow: 'hidden',
           }}
         >
@@ -669,6 +669,7 @@ export default function AspirePlayground() {
               alignItems: 'center',
               justifyContent: 'center',
               transition: 'all 0.2s',
+              flexShrink: 0,
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -680,47 +681,50 @@ export default function AspirePlayground() {
             }}
             title={isToolbarCollapsed ? 'Expand toolbar' : 'Collapse toolbar'}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg 
+              width="18" 
+              height="18" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="var(--sl-color-white)" 
+              strokeWidth="2.5" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+              style={{
+                transition: 'all 0.3s ease',
+              }}
+            >
               {isToolbarCollapsed ? (
-                <polyline points="9 18 15 12 9 6" />
+                <>
+                  <circle cx="6" cy="12" r="1" fill="var(--sl-color-white)" />
+                  <circle cx="12" cy="12" r="1" fill="var(--sl-color-white)" />
+                  <circle cx="18" cy="12" r="1" fill="var(--sl-color-white)" />
+                </>
               ) : (
                 <polyline points="15 18 9 12 15 6" />
               )}
             </svg>
           </button>
           
-          {/* Toolbar buttons - hidden when collapsed */}
-          {!isToolbarCollapsed && (
+          {/* Toolbar buttons - animated collapse/expand */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              maxWidth: isToolbarCollapsed ? '0px' : '1000px',
+              opacity: isToolbarCollapsed ? 0 : 1,
+              transition: 'max-width 0.3s ease-in-out, opacity 0.3s ease-in-out',
+              overflow: 'hidden',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {!isToolbarCollapsed && (
             <>
               <button
                 onClick={() => setShowTemplateGallery(true)}
                 style={{
-                  padding: '8px 16px',
-                  fontSize: '13px',
-                  background: 'var(--sl-color-accent)',
-                  color: 'var(--sl-color-black)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  transition: 'all 0.2s',
-                  whiteSpace: 'nowrap',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--sl-color-accent-high)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--sl-color-accent)';
-                }}
-                title="Templates"
-              >
-                <span>📋</span>
-                <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
-              </button>
-              <button
-                onClick={handleClearCanvas}
-                style={{
-                  padding: '8px 16px',
+                  padding: '0 16px',
+                  height: '36px',
                   fontSize: '13px',
                   background: 'var(--sl-color-gray-5)',
                   color: 'var(--sl-color-white)',
@@ -730,6 +734,36 @@ export default function AspirePlayground() {
                   fontWeight: 500,
                   transition: 'all 0.2s',
                   whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Templates"
+              >
+                <span>📋</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
+              </button>
+              <button
+                onClick={handleClearCanvas}
+                style={{
+                  padding: '0 16px',
+                  height: '36px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -745,7 +779,8 @@ export default function AspirePlayground() {
               <button
                 onClick={handleExport}
                 style={{
-                  padding: '8px 16px',
+                  padding: '0 16px',
+                  height: '36px',
                   fontSize: '13px',
                   background: 'var(--sl-color-gray-5)',
                   color: 'var(--sl-color-white)',
@@ -755,6 +790,8 @@ export default function AspirePlayground() {
                   fontWeight: 500,
                   transition: 'all 0.2s',
                   whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -770,7 +807,8 @@ export default function AspirePlayground() {
               <button
                 onClick={handleImport}
                 style={{
-                  padding: '8px 16px',
+                  padding: '0 16px',
+                  height: '36px',
                   fontSize: '13px',
                   background: 'var(--sl-color-gray-5)',
                   color: 'var(--sl-color-white)',
@@ -780,6 +818,8 @@ export default function AspirePlayground() {
                   fontWeight: 500,
                   transition: 'all 0.2s',
                   whiteSpace: 'nowrap',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-4)';
@@ -796,7 +836,8 @@ export default function AspirePlayground() {
                 <button
                   onClick={handleSaveToFile}
                   style={{
-                    padding: '8px 16px',
+                    padding: '0 16px',
+                    height: '36px',
                     fontSize: '13px',
                     background: saveMessage ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
                     color: saveMessage ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
@@ -805,6 +846,8 @@ export default function AspirePlayground() {
                     cursor: 'pointer',
                     fontWeight: 500,
                     transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
                   }}
                   onMouseEnter={(e) => {
                     if (!saveMessage) {
@@ -825,7 +868,8 @@ export default function AspirePlayground() {
               <button
                 onClick={() => setShowKeyboardLegend(!showKeyboardLegend)}
                 style={{
-                  padding: '8px 16px',
+                  padding: '0 16px',
+                  height: '36px',
                   fontSize: '13px',
                   background: showKeyboardLegend ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
                   color: showKeyboardLegend ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
@@ -834,6 +878,8 @@ export default function AspirePlayground() {
                   cursor: 'pointer',
                   fontWeight: 500,
                   transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
                 }}
                 onMouseEnter={(e) => {
                   if (!showKeyboardLegend) {
@@ -856,9 +902,10 @@ export default function AspirePlayground() {
                     onClick={handleShare}
                     disabled={nodes.length === 0}
                     style={{
-                      padding: '8px 16px',
+                      padding: '0 16px',
+                      height: '36px',
                       fontSize: '13px',
-                      background: 'var(--sl-color-blue-high)',
+                      background: 'var(--sl-color-gray-5)',
                       color: 'var(--sl-color-white)',
                       border: 'none',
                       borderRadius: '4px',
@@ -866,14 +913,16 @@ export default function AspirePlayground() {
                       fontWeight: 500,
                       transition: 'all 0.2s',
                       opacity: nodes.length === 0 ? 0.5 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                     onMouseEnter={(e) => {
                       if (nodes.length > 0) {
-                        e.currentTarget.style.background = 'var(--sl-color-blue)';
+                        e.currentTarget.style.background = 'var(--sl-color-gray-4)';
                       }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'var(--sl-color-blue-high)';
+                      e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                     }}
                     title="Copy shareable URL to clipboard"
                   >
@@ -884,7 +933,8 @@ export default function AspirePlayground() {
                     onClick={handleGetSvgUrl}
                     disabled={nodes.length === 0}
                     style={{
-                      padding: '8px 16px',
+                      padding: '0 16px',
+                      height: '36px',
                       fontSize: '13px',
                       background: 'var(--sl-color-gray-5)',
                       color: 'var(--sl-color-white)',
@@ -894,6 +944,8 @@ export default function AspirePlayground() {
                       fontWeight: 500,
                       transition: 'all 0.2s',
                       opacity: nodes.length === 0 ? 0.5 : 1,
+                      display: 'flex',
+                      alignItems: 'center',
                     }}
                     onMouseEnter={(e) => {
                       if (nodes.length > 0) {
@@ -911,7 +963,8 @@ export default function AspirePlayground() {
                 </>
               )}
             </>
-          )}
+            )}
+          </div>
         </div>
 
         {/* Current File Badge */}
