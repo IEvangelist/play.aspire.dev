@@ -8,7 +8,7 @@
   <path d="M135.92 144H60.32C56.08 144 52.08 146.32 49.92 150L53.36 144L83.92 91.12L84.24 90.64V90.56C87.6 84.8 94.96 82.8 100.64 86.16C102.56 87.2 104 88.72 105.04 90.48L128 130.24L135.92 144Z" fill="#9780E5"/>
   
   <!-- Paint Palette Emoji - positioned top right, midway and off center -->
-  <foreignObject x="135" y="55" width="130" height="130">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 88px; line-height: 1;">🎨</div>
+  <foreignObject x="90" y="35" width="185" height="185">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-size: 138px; line-height: 1;">🎨</div>
   </foreignObject>
 </svg>

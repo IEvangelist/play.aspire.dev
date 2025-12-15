@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { aspireResources, resourceCategories, type AspireResource } from '../../data/aspire-resources';
-import aspireLogo from '../../assets/aspire-logo-256.svg';
+import paletteLogo from '/favicon.svg';
 
 interface ResourcePaletteProps {
   onResourceDragStart: (event: React.DragEvent, resource: AspireResource) => void;
@@ -75,13 +75,13 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
           </svg>
         </button>
         <img 
-          src={aspireLogo} 
-          alt="Aspire" 
+          src={paletteLogo} 
+          alt="Aspire Playground" 
           style={{ 
-            height: '24px', 
+            height: '28px', 
             width: 'auto', 
             marginTop: '16px',
-            opacity: 0.7,
+            opacity: 0.9,
           }} 
         />
         
@@ -218,7 +218,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
               gap: '10px',
             }}
           >
-            <img src={aspireLogo} alt="Aspire" style={{ height: '28px', width: 'auto', paddingRight: '4px' }} />
+            <img src={paletteLogo} alt="Aspire Playground" style={{ height: '32px', width: 'auto', paddingRight: '4px' }} />
             Resource <span style={{ color: 'var(--sl-color-accent-high)' }}>Palette</span>
           </h2>
           <button
