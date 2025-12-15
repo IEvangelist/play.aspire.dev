@@ -37,7 +37,12 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const [copied, setCopied] = useState(false);
   const [copiedDeployIndex, setCopiedDeployIndex] = useState<number | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(true);
-  const [expandedWidth, setExpandedWidth] = useState(width);
+  const [expandedWidth, setExpandedWidth] = useState(() => {
+    // Initialize to a proper expanded width, not the collapsed width
+    const COLLAPSED_WIDTH = 54; // 48px content + 6px resize handle
+    const DEFAULT_EXPANDED_WIDTH = 520;
+    return width > COLLAPSED_WIDTH ? width : DEFAULT_EXPANDED_WIDTH;
+  });
   const [highlightedCode, setHighlightedCode] = useState<string>('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCollapsedMenuOpen, setIsCollapsedMenuOpen] = useState(false);
@@ -67,7 +72,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     return false;
   });
 
-  const COLLAPSED_WIDTH = 48;
+  const COLLAPSED_WIDTH = 54; // 48px content + 6px resize handle
   const DEFAULT_EXPANDED_WIDTH = 520;
 
   // Validation
@@ -1191,7 +1196,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
       style={{
         width: `${width}px`,
         height: '100%',
-        background: 'var(--sl-color-gray-6)',
+        background: 'var(--sl-color-gray-7)',
         borderLeft: '1px solid var(--sl-color-gray-5)',
         display: 'flex',
         flexDirection: 'column',
@@ -1248,32 +1253,42 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
             flexDirection: 'column',
             alignItems: 'center',
             paddingTop: '16px',
-            paddingLeft: '8px',
+            paddingBottom: '16px',
+            marginLeft: '6px',
             gap: '12px',
+            justifyContent: 'space-between',
           }}
         >
-          <button
-            onClick={handleDoubleClick}
-            style={{
-              width: '32px',
-              height: '32px',
-              background: 'var(--sl-color-gray-5)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--sl-color-accent)'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'var(--sl-color-gray-5)'}
-            title="Expand code panel"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
+          {/* Top section */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={handleDoubleClick}
+              style={{
+                width: '36px',
+                height: '36px',
+                background: 'var(--sl-color-gray-6)',
+                border: '1px solid var(--sl-color-gray-5)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                e.currentTarget.style.borderColor = 'var(--sl-color-accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--sl-color-gray-6)';
+                e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
+              }}
+              title="Expand code panel"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
           
           {/* Hamburger Menu for Tab Selection */}
           <div style={{ position: 'relative' }}>
@@ -1285,11 +1300,11 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                 setMenuButtonRect(rect);
               }}
               style={{
-                width: '32px',
-                height: '32px',
-                background: isCollapsedMenuOpen ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
-                border: 'none',
-                borderRadius: '4px',
+                width: '36px',
+                height: '36px',
+                background: isCollapsedMenuOpen ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
+                border: '1px solid var(--sl-color-gray-5)',
+                borderRadius: '6px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -1297,14 +1312,20 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                if (!isCollapsedMenuOpen) e.currentTarget.style.background = 'var(--sl-color-accent)';
+                if (!isCollapsedMenuOpen) {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  e.currentTarget.style.borderColor = 'var(--sl-color-accent)';
+                }
               }}
               onMouseLeave={(e) => {
-                if (!isCollapsedMenuOpen) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                if (!isCollapsedMenuOpen) {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-6)';
+                  e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
+                }
               }}
               title="Select tab"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="6" x2="21" y2="6" />
                 <line x1="3" y1="12" x2="21" y2="12" />
                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -1483,15 +1504,50 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
             )}
           </div>
           
-          <span style={{
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed',
-            color: 'var(--sl-color-gray-3)',
-            fontSize: '12px',
-            fontWeight: 500,
-          }}>
-            Code Preview
-          </span>
+            <span style={{
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              color: 'var(--sl-color-gray-3)',
+              fontSize: '12px',
+              fontWeight: 500,
+            }}>
+              Code Preview
+            </span>
+          </div>
+          
+          {/* Bottom section - Aspire docs link */}
+          <a
+            href="https://learn.microsoft.com/en-us/dotnet/aspire/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              width: '36px',
+              height: '36px',
+              background: 'transparent',
+              border: '1px solid var(--sl-color-gray-5)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+              e.currentTarget.style.borderColor = 'var(--sl-color-accent)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
+            }}
+            title="Aspire Documentation"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+          </a>
         </div>
       ) : (
         <>
@@ -1953,8 +2009,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '36px',
+                height: '36px',
                 background: 'transparent',
                 border: '1px solid var(--sl-color-gray-5)',
                 borderRadius: '6px',
@@ -1975,7 +2031,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               }}
               title="Visit aspire.dev"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
               </svg>

@@ -73,6 +73,14 @@ export default function AspirePlayground() {
     return false;
   });
   
+  const [isToolbarCollapsed, setIsToolbarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aspire-playground-toolbar-collapsed');
+      return saved === 'true';
+    }
+    return false;
+  });
+  
   const [selectedNode, setSelectedNode] = useState<Node<AspireNodeData> | null>(null);
   const [history, setHistory] = useState<{ nodes: Node<AspireNodeData>[]; edges: Edge[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -121,6 +129,10 @@ export default function AspirePlayground() {
   useEffect(() => {
     localStorage.setItem('aspire-playground-palette-collapsed', isPaletteCollapsed.toString());
   }, [isPaletteCollapsed]);
+  
+  useEffect(() => {
+    localStorage.setItem('aspire-playground-toolbar-collapsed', isToolbarCollapsed.toString());
+  }, [isToolbarCollapsed]);
 
   // Save keyboard legend preference to localStorage
   useEffect(() => {
@@ -634,227 +646,268 @@ export default function AspirePlayground() {
             zIndex: 4,
             display: 'flex',
             gap: '8px',
-            background: 'var(--sl-color-gray-6)',
+            background: 'var(--sl-color-gray-7)',
             padding: '8px',
             borderRadius: '8px',
             border: '1px solid var(--sl-color-gray-5)',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+            transition: 'all 0.2s ease-in-out',
+            overflow: 'hidden',
           }}
         >
+          {/* Collapse/Expand Toggle Button */}
           <button
-            onClick={() => setShowTemplateGallery(true)}
+            onClick={() => setIsToolbarCollapsed(!isToolbarCollapsed)}
             style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: 'var(--sl-color-accent)',
-              color: 'var(--sl-color-black)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-accent-high)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-accent)';
-            }}
-            title="Templates"
-          >
-            <span>📋</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
-          </button>
-          <button
-            onClick={handleClearCanvas}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
+              width: '36px',
+              height: '36px',
               background: 'var(--sl-color-gray-5)',
-              color: 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
+              border: '1px solid var(--sl-color-gray-5)',
+              borderRadius: '6px',
               cursor: 'pointer',
-              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+              e.currentTarget.style.borderColor = 'var(--sl-color-accent)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+              e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
             }}
-            title="Clear"
+            title={isToolbarCollapsed ? 'Expand toolbar' : 'Collapse toolbar'}
           >
-            <span>🗑️</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Clear</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              {isToolbarCollapsed ? (
+                <polyline points="9 18 15 12 9 6" />
+              ) : (
+                <polyline points="15 18 9 12 15 6" />
+              )}
+            </svg>
           </button>
-          <button
-            onClick={handleExport}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: 'var(--sl-color-gray-5)',
-              color: 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-            }}
-            title="Export"
-          >
-            <span>⬆️</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Export</span>
-          </button>
-          <button
-            onClick={handleImport}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: 'var(--sl-color-gray-5)',
-              color: 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-            }}
-            title="Import"
-          >
-            <span>⬇️</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Import</span>
-          </button>
-          {currentFile && (
-            <button
-              onClick={handleSaveToFile}
-              style={{
-                padding: '8px 16px',
-                fontSize: '13px',
-                background: saveMessage ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
-                color: saveMessage ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 500,
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={(e) => {
-                if (!saveMessage) {
+          
+          {/* Toolbar buttons - hidden when collapsed */}
+          {!isToolbarCollapsed && (
+            <>
+              <button
+                onClick={() => setShowTemplateGallery(true)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-accent)',
+                  color: 'var(--sl-color-black)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-accent-high)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-accent)';
+                }}
+                title="Templates"
+              >
+                <span>📋</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
+              </button>
+              <button
+                onClick={handleClearCanvas}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!saveMessage) {
+                }}
+                onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-                }
-              }}
-              title={saveMessage ? 'Saved' : `Save changes to "${currentFile}"`}
-            >
-              <span>{saveMessage ? '✓' : '💾'}</span>
-              <span style={{ marginLeft: '6px' }} className="toolbar-text">{saveMessage ? 'Saved' : 'Save'}</span>
-            </button>
+                }}
+                title="Clear"
+              >
+                <span>🗑️</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Clear</span>
+              </button>
+              <button
+                onClick={handleExport}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Export"
+              >
+                <span>⬆️</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Export</span>
+              </button>
+              <button
+                onClick={handleImport}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Import"
+              >
+                <span>⬇️</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Import</span>
+              </button>
+              {currentFile && (
+                <button
+                  onClick={handleSaveToFile}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    background: saveMessage ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
+                    color: saveMessage ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!saveMessage) {
+                      e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!saveMessage) {
+                      e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                    }
+                  }}
+                  title={saveMessage ? 'Saved' : `Save changes to "${currentFile}"`}
+                >
+                  <span>{saveMessage ? '✓' : '💾'}</span>
+                  <span style={{ marginLeft: '6px' }} className="toolbar-text">{saveMessage ? 'Saved' : 'Save'}</span>
+                </button>
+              )}
+              <button
+                onClick={() => setShowKeyboardLegend(!showKeyboardLegend)}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: showKeyboardLegend ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
+                  color: showKeyboardLegend ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  if (!showKeyboardLegend) {
+                    e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!showKeyboardLegend) {
+                    e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                  }
+                }}
+                title="Toggle keyboard shortcuts"
+              >
+                <span>⌨️</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Shortcuts</span>
+              </button>
+              <button
+                onClick={handleShare}
+                disabled={nodes.length === 0}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-blue-high)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  opacity: nodes.length === 0 ? 0.5 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (nodes.length > 0) {
+                    e.currentTarget.style.background = 'var(--sl-color-blue)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-blue-high)';
+                }}
+                title="Copy shareable URL to clipboard"
+              >
+                <span>🔗</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
+              </button>
+              <button
+                onClick={handleGetSvgUrl}
+                disabled={nodes.length === 0}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  background: 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  opacity: nodes.length === 0 ? 0.5 : 1,
+                }}
+                onMouseEnter={(e) => {
+                  if (nodes.length > 0) {
+                    e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Copy SVG embed URL to clipboard"
+              >
+                <span>🖼️</span>
+                <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
+              </button>
+            </>
           )}
-          <button
-            onClick={() => setShowKeyboardLegend(!showKeyboardLegend)}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: showKeyboardLegend ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
-              color: showKeyboardLegend ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              if (!showKeyboardLegend) {
-                e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!showKeyboardLegend) {
-                e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-              }
-            }}
-            title="Toggle keyboard shortcuts"
-          >
-            <span>⌨️</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Shortcuts</span>
-          </button>
-          <button
-            onClick={handleShare}
-            disabled={nodes.length === 0}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: 'var(--sl-color-blue-high)',
-              color: 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-              opacity: nodes.length === 0 ? 0.5 : 1,
-            }}
-            onMouseEnter={(e) => {
-              if (nodes.length > 0) {
-                e.currentTarget.style.background = 'var(--sl-color-blue)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-blue-high)';
-            }}
-            title="Copy shareable URL to clipboard"
-          >
-            <span>🔗</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
-          </button>
-          <button
-            onClick={handleGetSvgUrl}
-            disabled={nodes.length === 0}
-            style={{
-              padding: '8px 16px',
-              fontSize: '13px',
-              background: 'var(--sl-color-gray-5)',
-              color: 'var(--sl-color-white)',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: nodes.length === 0 ? 'not-allowed' : 'pointer',
-              fontWeight: 500,
-              transition: 'all 0.2s',
-              opacity: nodes.length === 0 ? 0.5 : 1,
-            }}
-            onMouseEnter={(e) => {
-              if (nodes.length > 0) {
-                e.currentTarget.style.background = 'var(--sl-color-gray-4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--sl-color-gray-5)';
-            }}
-            title="Copy SVG embed URL to clipboard"
-          >
-            <span>🖼️</span>
-            <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
-          </button>
         </div>
 
         {/* Current File Badge */}
@@ -865,7 +918,7 @@ export default function AspirePlayground() {
               top: '6px',
               right: '6px',
               zIndex: 4,
-              background: 'var(--sl-color-gray-6)',
+              background: 'var(--sl-color-gray-7)',
               padding: '8px 14px',
               borderRadius: '6px',
               border: '1px solid var(--sl-color-gray-5)',
