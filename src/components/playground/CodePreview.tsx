@@ -1517,7 +1517,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
           
           {/* Bottom section - Aspire docs link */}
           <a
-            href="https://learn.microsoft.com/en-us/dotnet/aspire/"
+            href="https://aspire.dev/"
             target="_blank"
             rel="noopener noreferrer"
             style={{
