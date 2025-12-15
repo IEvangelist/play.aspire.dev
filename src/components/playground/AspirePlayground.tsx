@@ -33,6 +33,7 @@ import {
   getCurrentFileName,
   setCurrentFileName,
   saveAppHostFile,
+  loadAppHostFile,
 } from '../../utils/appHostStorage';
 
 const nodeTypes = {
@@ -159,12 +160,13 @@ export default function AspirePlayground() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Load from URL if there's a shared apphost parameter
+  // Load from URL if there's a shared apphost parameter, or reload current file
   const [hasLoadedFromUrl, setHasLoadedFromUrl] = useState(false);
   
   useEffect(() => {
     if (hasLoadedFromUrl) return;
     
+    // First priority: load from URL if shared apphost exists
     const sharedAppHost = getAppHostFromUrl();
     if (sharedAppHost) {
       try {
@@ -181,8 +183,20 @@ export default function AspirePlayground() {
         console.error('Failed to load shared AppHost:', error);
       }
       setHasLoadedFromUrl(true);
+      return;
     }
-  }, [hasLoadedFromUrl, setNodes, setEdges]);
+    
+    // Second priority: reload current file if it exists
+    if (currentFile) {
+      const savedFile = loadAppHostFile(currentFile);
+      if (savedFile?.canvas) {
+        setNodes(savedFile.canvas.nodes);
+        setEdges(savedFile.canvas.edges);
+      }
+    }
+    
+    setHasLoadedFromUrl(true);
+  }, [hasLoadedFromUrl, currentFile, setNodes, setEdges]);
 
   // Track shift key state for snap-to-connected-nodes feature
   useEffect(() => {
@@ -707,18 +721,16 @@ export default function AspirePlayground() {
           </button>
           
           {/* Toolbar buttons - animated collapse/expand */}
+          {!isToolbarCollapsed && (
           <div
             style={{
               display: 'flex',
               gap: '8px',
-              maxWidth: isToolbarCollapsed ? '0px' : '1000px',
-              opacity: isToolbarCollapsed ? 0 : 1,
-              transition: 'max-width 0.3s ease-in-out, opacity 0.3s ease-in-out',
+              transition: 'opacity 0.3s ease-in-out',
               overflow: 'hidden',
               whiteSpace: 'nowrap',
             }}
           >
-            {!isToolbarCollapsed && (
             <>
               <button
                 onClick={() => setShowTemplateGallery(true)}
@@ -963,8 +975,8 @@ export default function AspirePlayground() {
                 </>
               )}
             </>
-            )}
           </div>
+          )}
         </div>
 
         {/* Current File Badge */}
