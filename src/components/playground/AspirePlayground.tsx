@@ -1053,7 +1053,7 @@ export default function AspirePlayground() {
               bottom: '6px',
               left: '38px',
               zIndex: 100,
-              background: 'rgba(30, 30, 35, 0.95)',
+              background: 'var(--sl-color-gray-7)',
               backdropFilter: 'blur(8px)',
               padding: '16px',
               borderRadius: '8px',

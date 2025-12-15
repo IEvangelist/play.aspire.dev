@@ -39,7 +39,7 @@ export default function TemplateGallery({ onApplyTemplate, onClose }: TemplateGa
     >
       <div
         style={{
-          background: 'var(--sl-color-bg)',
+          background: 'var(--sl-color-gray-7)',
           border: '1px solid var(--sl-color-gray-5)',
           borderRadius: '12px',
           width: '900px',
