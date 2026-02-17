@@ -90,6 +90,8 @@ export default function AspirePlayground() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
   const [clearCanvasConfirm, setClearCanvasConfirm] = useState(false);
+  const [importConfirm, setImportConfirm] = useState(false);
+  const [templateConfirm, setTemplateConfirm] = useState<Template | null>(null);
   const [showKeyboardLegend, setShowKeyboardLegend] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('aspire-playground-keyboard-legend');
@@ -603,9 +605,10 @@ export default function AspirePlayground() {
       if (result.nodes.length > 0) {
         // If there are existing nodes, ask for confirmation
         if (nodes.length > 0) {
-          if (!confirm('This will add imported resources to your canvas. Continue?')) {
-            return;
-          }
+          setImportConfirm(true);
+          // Store the result temporarily to use after confirmation
+          (window as any).__pendingImport = result;
+          return;
         }
         
         // Add imported nodes and edges to existing ones
@@ -630,7 +633,8 @@ export default function AspirePlayground() {
   }, [nodes.length, setNodes, setEdges]);
 
   const handleApplyTemplate = (template: Template) => {
-    if (nodes.length > 0 && !confirm('This will replace your current canvas. Continue?')) {
+    if (nodes.length > 0) {
+      setTemplateConfirm(template);
       return;
     }
     setNodes(template.nodes);
@@ -1348,6 +1352,54 @@ export default function AspirePlayground() {
         requireTypedConfirmation="clear"
         onConfirm={confirmClearCanvas}
         onCancel={() => setClearCanvasConfirm(false)}
+      />
+
+      {/* Import Resources Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={importConfirm}
+        title="Add Imported Resources?"
+        message="This will add imported resources to your canvas. Continue?"
+        confirmText="Add Resources"
+        cancelText="Cancel"
+        confirmColor="#3B82F6"
+        onConfirm={() => {
+          setImportConfirm(false);
+          const result = (window as any).__pendingImport;
+          if (result) {
+            const importedNodes = result.nodes;
+            const importedEdges = result.edges;
+            setNodes((nds) => [...nds, ...importedNodes]);
+            setEdges((eds) => [...eds, ...importedEdges]);
+            
+            if (result.warnings.length > 0) {
+              setImportWarnings(result.warnings);
+              setTimeout(() => setImportWarnings([]), 5000);
+            }
+            delete (window as any).__pendingImport;
+          }
+        }}
+        onCancel={() => {
+          setImportConfirm(false);
+          delete (window as any).__pendingImport;
+        }}
+      />
+
+      {/* Apply Template Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!templateConfirm}
+        title="Replace Canvas?"
+        message="This will replace your current canvas with the selected template. This action cannot be undone."
+        confirmText="Apply Template"
+        cancelText="Cancel"
+        confirmColor="#3B82F6"
+        onConfirm={() => {
+          if (templateConfirm) {
+            setNodes(templateConfirm.nodes);
+            setEdges(templateConfirm.edges);
+            setTemplateConfirm(null);
+          }
+        }}
+        onCancel={() => setTemplateConfirm(null)}
       />
 
     </div>

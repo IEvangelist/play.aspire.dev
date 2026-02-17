@@ -25,3 +25,6 @@ dist-ssr
 
 # Build artifacts
 artifacts
+
+# NuGet package cache for resource generation
+.nuget-cache

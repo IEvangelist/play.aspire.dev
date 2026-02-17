@@ -52,13 +52,13 @@ export function generateAppHostCode(nodes: Node<AspireNodeData>[], edges: Edge[]
 
       case 'node-app':
         code = `var ${sanitizedInstanceName} = builder.AddNodeApp("${instanceName}", "../${instanceName}")`;
-        nugetPackages.add('Aspire.Hosting.NodeJs@13.0.0');
+        nugetPackages.add('Aspire.Hosting.JavaScript@13.0.0');
         break;
 
       case 'vite-app':
         code = `var ${sanitizedInstanceName} = builder.AddViteApp("${instanceName}", "../${instanceName}")
     .WithHttpEndpoint(env: "PORT")`;
-        nugetPackages.add('Aspire.Hosting.NodeJs@13.0.0');
+        nugetPackages.add('Aspire.Hosting.JavaScript@13.0.0');
         break;
 
       case 'python-app':

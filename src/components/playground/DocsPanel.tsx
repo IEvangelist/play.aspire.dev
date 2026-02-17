@@ -25,7 +25,7 @@ export default function DocsPanel({ resource, onClose }: DocsPanelProps) {
       'Aspire.Hosting.RabbitMQ': 'https://aspire.dev/docs/messaging/rabbitmq-component',
       'Aspire.Hosting.Kafka': 'https://aspire.dev/docs/messaging/kafka-component',
       'Aspire.Hosting.Nats': 'https://aspire.dev/docs/messaging/nats-component',
-      'Aspire.Hosting.NodeJs': 'https://aspire.dev/docs/get-started/build-aspire-apps-with-nodejs',
+      'Aspire.Hosting.JavaScript': 'https://aspire.dev/integrations/frameworks/javascript/',
       'Aspire.Hosting.Python': 'https://aspire.dev/docs/get-started/build-aspire-apps-with-python',
       'Aspire.Hosting.Ollama': 'https://aspire.dev/docs/azureai/azureai-openai-component',
     };

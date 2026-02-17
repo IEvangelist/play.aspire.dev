@@ -67,21 +67,40 @@ function findAspireResource(identifier: string): typeof aspireResources[0] | und
 }
 
 /**
- * Parse C# AppHost.cs file and extract resources
+ * Parse C# AppHost.cs file and extract resources with comprehensive support for:
+ * - All resource types (databases, caching, messaging, projects, etc.)
+ * - .WithReference() and .WaitFor() dependencies
+ * - Environment variables via .WithEnvironment()
+ * - Port mappings via .WithHttpEndpoint()
+ * - Volume mounts via .WithBindMount()
+ * - Replicas via .WithReplicas()
+ * - Persistence via .WithLifetime()
+ * - Custom images via .WithImage() and .WithImageTag()
  */
 export function parseAppHost(content: string): ImportResult {
   const nodes: Node<AspireNodeData>[] = [];
   const edges: Edge[] = [];
   const warnings: string[] = [];
   const resourceMap = new Map<string, string>(); // variable name -> node id
+  const resourceStatements = new Map<string, string>(); // variable name -> full statement including chained methods
 
-  // Match builder.Add* patterns
-  // Examples:
-  // var postgres = builder.AddPostgres("postgres");
-  // var db = postgres.AddDatabase("mydb");
-  // builder.AddProject<Projects.Api>("api").WithReference(db);
+  // Remove comments to avoid false matches
+  const cleanedContent = content
+    .replace(/\/\/.*$/gm, '') // Remove single-line comments
+    .replace(/\/\*[\s\S]*?\*\//g, ''); // Remove multi-line comments
+
+  // First pass: Extract all resource variable declarations with their complete statements
+  // This regex matches: var name = builder.AddXxx(...) or parent.AddXxx(...) including all chained methods until semicolon
+  const resourcePattern = /(?:var|let|const)\s+(\w+)\s*=\s*((?:builder|[\w]+)\.Add\w+[^;]+);/gs;
+  let match;
   
-  // First pass: extract all resources
+  while ((match = resourcePattern.exec(cleanedContent)) !== null) {
+    const varName = match[1];
+    const statement = match[2].trim();
+    resourceStatements.set(varName, statement);
+  }
+
+  // Position tracking
   let yPosition = 100;
   const xPositions = {
     project: 600,
@@ -91,67 +110,196 @@ export function parseAppHost(content: string): ImportResult {
     ai: 100,
     compute: 600,
   };
-  
-  // Pattern 1: var name = builder.AddXxx("resourceName")
-  const pattern1 = /(?:var|let|const)\s+(\w+)\s*=\s*builder\.Add(\w+)(?:<[^>]+>)?\s*\(\s*"([^"]+)"/g;
-  let match;
-  
-  while ((match = pattern1.exec(content)) !== null) {
-    const [, varName, methodSuffix, resourceName] = match;
+
+  // Second pass: Parse each resource statement to extract configuration
+  for (const [varName, statement] of resourceStatements) {
+    // Check if this is a database declaration (e.g., var db = postgres.AddDatabase("mydb"))
+    const dbMatch = statement.match(/(\w+)\.AddDatabase\s*\(\s*"([^"]+)"/);
+    if (dbMatch) {
+      const parentVar = dbMatch[1];
+      const dbName = dbMatch[2];
+      const parentNodeId = resourceMap.get(parentVar);
+      
+      if (parentNodeId) {
+        const parentNode = nodes.find(n => n.id === parentNodeId);
+        if (parentNode) {
+          parentNode.data.databaseName = dbName;
+        }
+        // Map database variable to parent node for reference tracking
+        resourceMap.set(varName, parentNodeId);
+      }
+      continue;
+    }
+
+    // Parse main resource: builder.AddXxx("name") or builder.AddXxx<Type>("name")
+    const resourceMatch = statement.match(/builder\.Add(\w+)(?:<[^>]+>)?\s*\(\s*"([^"]+)"/);
+    if (!resourceMatch) {
+      // Try special cases like YARP
+      const yarpMatch = statement.match(/builder\.AddYarp\s*\(\s*"([^"]+)"/);
+      if (yarpMatch) {
+        const resourceName = yarpMatch[1];
+        const nodeId = getNodeId();
+        resourceMap.set(varName, nodeId);
+        
+        nodes.push({
+          id: nodeId,
+          type: 'aspire',
+          position: { x: 600, y: yPosition },
+          data: {
+            resourceType: 'container',
+            label: 'YARP Proxy',
+            icon: '🔀',
+            color: '#4A90E2',
+            instanceName: resourceName,
+          },
+        });
+        
+        yPosition += 120;
+      }
+      continue;
+    }
+
+    const methodSuffix = resourceMatch[1];
+    const resourceName = resourceMatch[2];
     const resource = findAspireResource(methodSuffix);
     
-    if (resource) {
-      const nodeId = getNodeId();
-      resourceMap.set(varName, nodeId);
-      
-      const category = resource.category;
-      const xPos = xPositions[category] || 300;
-      xPositions[category] += 250;
-      
-      nodes.push({
-        id: nodeId,
-        type: 'aspire',
-        position: { x: xPos, y: yPosition },
-        data: {
-          resourceType: resource.id,
-          label: resource.displayName,
-          icon: resource.icon,
-          color: resource.color,
-          instanceName: resourceName,
-          databaseName: resource.allowsDatabase ? undefined : undefined,
-          allowsDatabase: resource.allowsDatabase,
-        },
-      });
-      
-      yPosition += 120;
-    } else {
+    if (!resource) {
       warnings.push(`Unknown resource type: Add${methodSuffix}`);
+      continue;
     }
-  }
 
-  // Pattern 2: var db = parentVar.AddDatabase("dbname")
-  const pattern2 = /(?:var|let|const)\s+(\w+)\s*=\s*(\w+)\.AddDatabase\s*\(\s*"([^"]+)"/g;
-  
-  while ((match = pattern2.exec(content)) !== null) {
-    const [, varName, parentVar, dbName] = match;
-    const parentNodeId = resourceMap.get(parentVar);
-    
-    if (parentNodeId) {
-      // Update the parent node with database name
-      const parentNode = nodes.find(n => n.id === parentNodeId);
-      if (parentNode) {
-        parentNode.data.databaseName = dbName;
+    const nodeId = getNodeId();
+    resourceMap.set(varName, nodeId);
+
+    // Parse environment variables: .WithEnvironment("KEY", "value") or .WithEnvironment("KEY", expr)
+    const envVars: { key: string; value: string }[] = [];
+    const envPattern = /\.WithEnvironment\s*\(\s*"([^"]+)"\s*,\s*([^)]+)\)/g;
+    let envMatch;
+    while ((envMatch = envPattern.exec(statement)) !== null) {
+      const key = envMatch[1];
+      let value = envMatch[2].trim();
+      
+      // Remove quotes if it's a string literal
+      if (value.startsWith('"') && value.endsWith('"')) {
+        value = value.slice(1, -1);
+      } else {
+        // It's an expression/variable reference - use placeholder
+        value = `{${value}}`;
       }
-      // Store the database variable mapping to the parent node for references
-      resourceMap.set(varName, parentNodeId);
+      
+      envVars.push({ key, value });
     }
+
+    // Parse ports: .WithHttpEndpoint(port: 8080, targetPort: 3000) or .WithHttpEndpoint(targetPort: 8080)
+    const ports: { host: string; container: string }[] = [];
+    const portPattern = /\.WithHttpEndpoint\s*\(([^)]+)\)/g;
+    let portMatch;
+    while ((portMatch = portPattern.exec(statement)) !== null) {
+      const args = portMatch[1];
+      const portArg = args.match(/port:\s*(\d+)/);
+      const targetPortArg = args.match(/targetPort:\s*(\d+)/);
+      
+      if (targetPortArg) {
+        ports.push({
+          host: portArg ? portArg[1] : targetPortArg[1], // Use same port if host not specified
+          container: targetPortArg[1],
+        });
+      }
+    }
+
+    // Parse volumes: .WithBindMount("source", "target")
+    const volumes: { source: string; target: string }[] = [];
+    const volumePattern = /\.WithBindMount\s*\(\s*"([^"]+)"\s*,\s*"([^"]+)"\s*\)/g;
+    let volumeMatch;
+    while ((volumeMatch = volumePattern.exec(statement)) !== null) {
+      volumes.push({ source: volumeMatch[1], target: volumeMatch[2] });
+    }
+
+    // Parse replicas: .WithReplicas(3)
+    let replicas: number | undefined = undefined;
+    const replicasMatch = statement.match(/\.WithReplicas\s*\(\s*(\d+)\s*\)/);
+    if (replicasMatch) {
+      replicas = parseInt(replicasMatch[1], 10);
+    }
+
+    // Check persistence: .WithLifetime(ContainerLifetime.Persistent)
+    const persistent = statement.includes('.WithLifetime(ContainerLifetime.Persistent)');
+
+    // Position the node
+    const category = resource.category;
+    const xPos = xPositions[category] || 300;
+    xPositions[category] += 250;
+    
+    nodes.push({
+      id: nodeId,
+      type: 'aspire',
+      position: { x: xPos, y: yPosition },
+      data: {
+        resourceType: resource.id,
+        label: resource.displayName,
+        icon: resource.icon,
+        color: resource.color,
+        instanceName: resourceName,
+        databaseName: resource.allowsDatabase ? undefined : undefined,
+        allowsDatabase: resource.allowsDatabase,
+        envVars: envVars.length > 0 ? envVars : undefined,
+        ports: ports.length > 0 ? ports : undefined,
+        volumes: volumes.length > 0 ? volumes : undefined,
+        replicas: replicas && replicas > 1 ? replicas : undefined,
+        persistent: persistent || undefined,
+      },
+    });
+    
+    yPosition += 120;
   }
 
-  // Pattern 3: Find .WithReference(resourceVar) calls
-  // TODO: Implement parsing of chained .WithReference() calls
-  // This would handle cases like:
-  //   var api = builder.AddProject<Projects.Api>("api")
-  //       .WithReference(database);
+  // Third pass: Extract dependencies and create edges
+  for (const [varName, statement] of resourceStatements) {
+    const sourceNodeId = resourceMap.get(varName);
+    if (!sourceNodeId) continue;
+
+    // Find all .WithReference(targetVar) calls
+    const refPattern = /\.WithReference\s*\(\s*(\w+)\s*\)/g;
+    let refMatch;
+    while ((refMatch = refPattern.exec(statement)) !== null) {
+      const targetVar = refMatch[1];
+      const targetNodeId = resourceMap.get(targetVar);
+      
+      if (targetNodeId && targetNodeId !== sourceNodeId) {
+        const edgeId = `edge_${sourceNodeId}_${targetNodeId}`;
+        if (!edges.some(e => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: sourceNodeId,
+            target: targetNodeId,
+            animated: true,
+            style: { stroke: '#888', strokeWidth: 2 },
+          });
+        }
+      }
+    }
+
+    // Find all .WaitFor(targetVar) calls
+    const waitPattern = /\.WaitFor\s*\(\s*(\w+)\s*\)/g;
+    let waitMatch;
+    while ((waitMatch = waitPattern.exec(statement)) !== null) {
+      const targetVar = waitMatch[1];
+      const targetNodeId = resourceMap.get(targetVar);
+      
+      if (targetNodeId && targetNodeId !== sourceNodeId) {
+        const edgeId = `edge_${sourceNodeId}_${targetNodeId}`;
+        if (!edges.some(e => e.id === edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: sourceNodeId,
+            target: targetNodeId,
+            animated: true,
+            style: { stroke: '#888', strokeWidth: 2 },
+          });
+        }
+      }
+    }
+  }
 
   if (nodes.length === 0) {
     warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* patterns.');

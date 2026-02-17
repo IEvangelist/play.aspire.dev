@@ -345,10 +345,16 @@ export default function ImportModal({ isOpen, onClose, onImport }: ImportModalPr
               }}
             >
               <div style={{
-                fontSize: '48px',
                 marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}>
-                {importOptions.find(o => o.id === selectedType)?.icon}
+                <img 
+                  src={importOptions.find(o => o.id === selectedType)?.icon} 
+                  alt={importOptions.find(o => o.id === selectedType)?.title}
+                  style={{ width: '64px', height: '64px' }}
+                />
               </div>
               <p style={{
                 color: 'var(--sl-color-white)',
