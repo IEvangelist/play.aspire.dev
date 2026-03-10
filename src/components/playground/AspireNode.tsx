@@ -1,4 +1,4 @@
-import { memo, useState, useCallback, useRef } from 'react';
+import { memo, useState, useCallback, useRef, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 
@@ -29,6 +29,15 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
   const [instanceName, setInstanceName] = useState(data.instanceName || '');
   const [databaseName, setDatabaseName] = useState(data.databaseName || '');
   const instanceNameRef = useRef<HTMLInputElement>(null);
+
+  // Sync local state when props change (e.g. from config panel save)
+  useEffect(() => {
+    setInstanceName(data.instanceName || '');
+  }, [data.instanceName]);
+
+  useEffect(() => {
+    setDatabaseName(data.databaseName || '');
+  }, [data.databaseName]);
 
   const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     // Only open config if the double-click wasn't on an input/editable area
