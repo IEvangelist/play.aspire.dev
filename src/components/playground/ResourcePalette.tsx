@@ -391,7 +391,11 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                       {resource.package}
                     </div>
                   </div>
-                  <img src={resource.icon} alt="" style={{ height: '36px', maxWidth: '64px', width: 'auto', objectFit: 'contain' }} />
+                  {resource.icon ? (
+                    <img src={resource.icon} alt="" style={{ height: '36px', maxWidth: '64px', width: 'auto', objectFit: 'contain' }} />
+                  ) : (
+                    <span style={{ fontSize: '28px' }}>📦</span>
+                  )}
                 </div>
                 <div
                   style={{

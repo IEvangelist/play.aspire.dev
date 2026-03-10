@@ -98,7 +98,11 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
       />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <img src={data.icon} alt="" style={{ height: '24px', maxWidth: '40px', width: 'auto', objectFit: 'contain' }} />
+        {data.icon ? (
+          <img src={data.icon} alt="" style={{ height: '24px', maxWidth: '40px', width: 'auto', objectFit: 'contain' }} />
+        ) : (
+          <span style={{ fontSize: '20px', lineHeight: '24px' }}>📦</span>
+        )}
         <span
           style={{
             fontSize: '12px',

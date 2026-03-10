@@ -27,8 +27,12 @@ import ImportModal, { type ImportType } from './ImportModal';
 import { generateAppHostCode } from '../../utils/codeGenerator';
 import { parseAppHost, parseDockerCompose, parseDockerfile } from '../../utils/importParsers';
 import { getAppHostFromUrl, encodeAppHost, createSvgUrl } from '../../utils/urlEncoding';
-import type { AspireResource } from '../../data/aspire-resources';
+import { aspireResources, type AspireResource } from '../../data/aspire-resources';
 import type { Template } from '../../data/templates';
+
+// Derive category sets from resource data for connection validation
+const categorySetByType = new Map<string, string>();
+aspireResources.forEach(r => categorySetByType.set(r.id, r.category));
 import {
   getCurrentFileName,
   setCurrentFileName,
@@ -410,30 +414,17 @@ export default function AspirePlayground() {
     
     if (!sourceNode || !targetNode) return false;
 
-    const sourceType = sourceNode.data.resourceType;
-    const targetType = targetNode.data.resourceType;
-
-    // Prevent connecting databases to databases
-    const databases = ['postgres', 'sqlserver', 'mongodb', 'mysql', 'oracle'];
-    if (databases.includes(sourceType) && databases.includes(targetType)) {
-      return false;
-    }
-
-    // Prevent connecting cache to cache
-    const caches = ['redis', 'valkey', 'garnet'];
-    if (caches.includes(sourceType) && caches.includes(targetType)) {
-      return false;
-    }
-
-    // Prevent connecting messaging to messaging
-    const messaging = ['rabbitmq', 'kafka', 'nats'];
-    if (messaging.includes(sourceType) && messaging.includes(targetType)) {
-      return false;
-    }
-
     // Prevent self-connections
-    if (connection.source === connection.target) {
-      return false;
+    if (connection.source === connection.target) return false;
+
+    const sourceCategory = categorySetByType.get(sourceNode.data.resourceType);
+    const targetCategory = categorySetByType.get(targetNode.data.resourceType);
+
+    // Prevent connecting resources of the same infrastructure category
+    if (sourceCategory && targetCategory && sourceCategory === targetCategory) {
+      if (['database', 'cache', 'messaging'].includes(sourceCategory)) {
+        return false;
+      }
     }
 
     return true;

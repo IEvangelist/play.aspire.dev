@@ -51,8 +51,8 @@ function findAspireResource(identifier: string): typeof aspireResources[0] | und
     'oracle': 'oracle',
     'ollama': 'ollama',
     'nginx': 'container',
-    'node': 'node-app',
-    'python': 'python-app',
+    'node': 'nodeapp',
+    'python': 'pythonapp',
   };
   
   // Check if the identifier contains any known image names

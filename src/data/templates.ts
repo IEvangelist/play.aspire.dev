@@ -173,9 +173,9 @@ export const templates: Template[] = [
         type: 'aspire',
         position: { x: 700, y: 125 },
         data: {
-          resourceType: 'vite-app',
+          resourceType: 'viteapp',
           label: 'Vite App',
-          icon: '⚡',
+          icon: '',
           color: '#646CFF',
           instanceName: 'frontend',
         },

@@ -1,5 +1,6 @@
 import type { Node, Edge } from '@xyflow/react';
 import type { AspireNodeData } from '../components/playground/AspireNode';
+import { aspireResources } from '../data/aspire-resources';
 
 export interface ValidationIssue {
   id: string;
@@ -9,6 +10,19 @@ export interface ValidationIssue {
   category: 'architecture' | 'security' | 'performance' | 'reliability';
   suggestion?: string;
 }
+
+// Derive resource type sets from the canonical resource data
+const databaseTypes = new Set(aspireResources.filter(r => r.category === 'database').map(r => r.id));
+const cacheTypes = new Set(aspireResources.filter(r => r.category === 'cache').map(r => r.id));
+const messagingTypes = new Set(aspireResources.filter(r => r.category === 'messaging').map(r => r.id));
+const projectTypes = new Set(aspireResources.filter(r => r.category === 'project').map(r => r.id));
+// Container is special — it's a compute resource but behaves like a project for validation
+const appTypes = new Set([...projectTypes, 'container']);
+
+function isDatabase(type: string) { return databaseTypes.has(type); }
+function isCache(type: string) { return cacheTypes.has(type); }
+function isMessaging(type: string) { return messagingTypes.has(type); }
+function isApp(type: string) { return appTypes.has(type); }
 
 export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[]): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -29,11 +43,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
 
   // Check for databases without persistent lifetime
   nodes.forEach(node => {
-    const isDatabaseResource = ['postgres', 'sqlserver', 'mongodb', 'mysql', 'oracle'].includes(
-      node.data.resourceType
-    );
-    
-    if (isDatabaseResource && node.data.persistent === false) {
+    if (isDatabase(node.data.resourceType) && node.data.persistent === false) {
       issues.push({
         id: `non-persistent-db-${node.id}`,
         severity: 'warning',
@@ -47,11 +57,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
 
   // Check for projects without any connections
   nodes.forEach(node => {
-    const isProjectResource = ['dotnet-project', 'node-app', 'vite-app', 'python-app', 'container'].includes(
-      node.data.resourceType
-    );
-
-    if (isProjectResource) {
+    if (isApp(node.data.resourceType)) {
       const hasConnections = edges.some(edge => edge.source === node.id || edge.target === node.id);
       
       if (!hasConnections) {
@@ -69,11 +75,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
 
   // Check for databases without any consumers
   nodes.forEach(node => {
-    const isDatabaseResource = ['postgres', 'sqlserver', 'mongodb', 'mysql', 'oracle'].includes(
-      node.data.resourceType
-    );
-
-    if (isDatabaseResource) {
+    if (isDatabase(node.data.resourceType)) {
       const hasConsumers = edges.some(edge => edge.source === node.id);
       
       if (!hasConsumers) {
@@ -91,11 +93,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
 
   // Check for missing replicas configuration
   nodes.forEach(node => {
-    const isProjectResource = ['dotnet-project', 'node-app', 'vite-app', 'python-app', 'container'].includes(
-      node.data.resourceType
-    );
-
-    if (isProjectResource && (!node.data.replicas || node.data.replicas < 2)) {
+    if (isApp(node.data.resourceType) && (!node.data.replicas || node.data.replicas < 2)) {
       const hasMultipleConnections = edges.filter(edge => edge.target === node.id).length > 2;
       
       if (hasMultipleConnections) {
@@ -113,11 +111,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
 
   // Check for missing environment variables for common scenarios
   nodes.forEach(node => {
-    const needsEnvVars = ['dotnet-project', 'node-app', 'vite-app', 'python-app', 'container'].includes(
-      node.data.resourceType
-    );
-
-    if (needsEnvVars && (!node.data.envVars || node.data.envVars.length === 0)) {
+    if (isApp(node.data.resourceType) && (!node.data.envVars || node.data.envVars.length === 0)) {
       const hasConnections = edges.some(edge => edge.target === node.id);
       
       if (hasConnections) {
@@ -134,7 +128,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
   });
 
   // Anti-pattern: Multiple messaging systems
-  const messagingSystems = nodes.filter(n => ['rabbitmq', 'kafka', 'nats'].includes(n.data.resourceType));
+  const messagingSystems = nodes.filter(n => isMessaging(n.data.resourceType));
   if (messagingSystems.length > 1) {
     issues.push({
       id: 'multiple-messaging',
@@ -146,7 +140,7 @@ export function validatePlayground(nodes: Node<AspireNodeData>[], edges: Edge[])
   }
 
   // Anti-pattern: Multiple cache systems
-  const cacheSystems = nodes.filter(n => ['redis', 'valkey', 'garnet'].includes(n.data.resourceType));
+  const cacheSystems = nodes.filter(n => isCache(n.data.resourceType));
   if (cacheSystems.length > 1) {
     issues.push({
       id: 'multiple-cache',
