@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Node } from '@xyflow/react';
 import type { AspireNodeData } from './AspireNode';
+import { aspireResources } from '../../data/aspire-resources';
 
 interface ConfigPanelProps {
   selectedNode: Node<AspireNodeData> | null;
@@ -23,25 +24,71 @@ interface VolumeMount {
   target: string;
 }
 
+const inputStyle: React.CSSProperties = {
+  flex: 1,
+  padding: '8px',
+  fontSize: '13px',
+  background: 'var(--sl-color-gray-6)',
+  border: '1px solid var(--sl-color-gray-5)',
+  borderRadius: '4px',
+  color: 'var(--sl-color-white)',
+  fontFamily: 'var(--sl-font-mono)',
+};
+
+const sectionTitleStyle: React.CSSProperties = {
+  margin: 0,
+  fontSize: '14px',
+  fontWeight: 600,
+  color: 'var(--sl-color-white)',
+};
+
+const addButtonStyle: React.CSSProperties = {
+  padding: '4px 12px',
+  fontSize: '12px',
+  background: 'var(--sl-color-accent)',
+  color: 'var(--sl-color-black)',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontWeight: 500,
+};
+
+const removeButtonStyle: React.CSSProperties = {
+  padding: '8px',
+  background: 'transparent',
+  border: '1px solid var(--sl-color-gray-5)',
+  borderRadius: '4px',
+  color: 'var(--sl-color-gray-3)',
+  cursor: 'pointer',
+  fontSize: '16px',
+};
+
 export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: ConfigPanelProps) {
   const [envVars, setEnvVars] = useState<EnvironmentVariable[]>([]);
   const [ports, setPorts] = useState<PortMapping[]>([]);
   const [volumes, setVolumes] = useState<VolumeMount[]>([]);
   const [replicas, setReplicas] = useState<number>(1);
   const [persistent, setPersistent] = useState(true);
+  const [instanceName, setInstanceName] = useState('');
+  const [databaseName, setDatabaseName] = useState('');
 
   useEffect(() => {
     if (!selectedNode) return;
 
-    // Load existing config from node data
     setEnvVars(selectedNode.data.envVars || []);
     setPorts(selectedNode.data.ports || []);
     setVolumes(selectedNode.data.volumes || []);
     setReplicas(selectedNode.data.replicas || 1);
     setPersistent(selectedNode.data.persistent !== false);
+    setInstanceName(selectedNode.data.instanceName || '');
+    setDatabaseName(selectedNode.data.databaseName || '');
   }, [selectedNode]);
 
   if (!selectedNode) return null;
+
+  const resourceDef = aspireResources.find(r => r.id === selectedNode.data.resourceType);
+  const isDatabase = resourceDef?.category === 'database';
+  const isContainer = selectedNode.data.resourceType === 'container';
 
   const handleSave = () => {
     onUpdateNode(selectedNode.id, {
@@ -50,57 +97,52 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
       volumes,
       replicas,
       persistent,
+      instanceName: instanceName.trim() || selectedNode.data.instanceName,
+      databaseName: databaseName.trim() || undefined,
     });
     onClose();
   };
 
-  const addEnvVar = () => {
-    setEnvVars([...envVars, { key: '', value: '' }]);
-  };
-
-  const removeEnvVar = (index: number) => {
-    setEnvVars(envVars.filter((_, i) => i !== index));
-  };
-
+  const addEnvVar = () => setEnvVars([...envVars, { key: '', value: '' }]);
+  const removeEnvVar = (index: number) => setEnvVars(envVars.filter((_, i) => i !== index));
   const updateEnvVar = (index: number, field: 'key' | 'value', value: string) => {
     const updated = [...envVars];
     updated[index][field] = value;
     setEnvVars(updated);
   };
 
-  const addPort = () => {
-    setPorts([...ports, { container: '', host: '' }]);
-  };
-
-  const removePort = (index: number) => {
-    setPorts(ports.filter((_, i) => i !== index));
-  };
-
+  const addPort = () => setPorts([...ports, { container: '', host: '' }]);
+  const removePort = (index: number) => setPorts(ports.filter((_, i) => i !== index));
   const updatePort = (index: number, field: 'container' | 'host', value: string) => {
     const updated = [...ports];
     updated[index][field] = value;
     setPorts(updated);
   };
 
-  const addVolume = () => {
-    setVolumes([...volumes, { source: '', target: '' }]);
-  };
+  const addVolume = () => setVolumes([...volumes, { source: '', target: '' }]);
+  const removeVolume = (index: number) => setVolumes(volumes.filter((_, i) => i !== index));
+  const updateVolume = useCallback((index: number, field: 'source' | 'target', value: string) => {
+    setVolumes(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  }, []);
 
-  const removeVolume = (index: number) => {
-    setVolumes(volumes.filter((_, i) => i !== index));
-  };
+  const pickFolder = useCallback(async (index: number) => {
+    try {
+      if ('showDirectoryPicker' in window) {
+        const dirHandle = await (window as any).showDirectoryPicker();
+        updateVolume(index, 'source', `./${dirHandle.name}`);
+      }
+    } catch {
+      // User cancelled or API not available
+    }
+  }, [updateVolume]);
 
-  const updateVolume = (index: number, field: 'source' | 'target', value: string) => {
-    const updated = [...volumes];
-    updated[index][field] = value;
-    setVolumes(updated);
-  };
-
-  const isDatabase = ['postgres', 'sqlserver', 'mongodb', 'mysql', 'oracle'].includes(
-    selectedNode.data.resourceType
-  );
-
-  const isContainer = selectedNode.data.resourceType === 'container';
+  const docsUrl = resourceDef
+    ? `https://www.nuget.org/packages/${resourceDef.package}`
+    : null;
 
   return (
     <div
@@ -123,8 +165,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
           background: 'var(--sl-color-bg)',
           border: '1px solid var(--sl-color-gray-5)',
           borderRadius: '12px',
-          width: '600px',
-          maxHeight: '80vh',
+          width: '680px',
+          maxHeight: '85vh',
           overflow: 'auto',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
         }}
@@ -141,7 +183,11 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img src={selectedNode.data.icon} alt="" style={{ height: '32px', maxWidth: '56px', width: 'auto', objectFit: 'contain' }} />
+            {selectedNode.data.icon ? (
+              <img src={selectedNode.data.icon} alt="" style={{ height: '32px', maxWidth: '56px', width: 'auto', objectFit: 'contain' }} />
+            ) : (
+              <span style={{ fontSize: '28px' }}>📦</span>
+            )}
             <div>
               <h2
                 style={{
@@ -153,16 +199,23 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
               >
                 Configure {selectedNode.data.label}
               </h2>
-              <p
-                style={{
-                  margin: '4px 0 0 0',
-                  fontSize: '13px',
-                  color: 'var(--sl-color-gray-3)',
-                  fontFamily: 'var(--sl-font-mono)',
-                }}
-              >
-                {selectedNode.data.instanceName}
-              </p>
+              {resourceDef && (
+                <p
+                  style={{
+                    margin: '2px 0 0 0',
+                    fontSize: '12px',
+                    color: 'var(--sl-color-gray-3)',
+                    fontFamily: 'var(--sl-font-mono)',
+                  }}
+                >
+                  {resourceDef.package}
+                  {resourceDef.nugetPackage && (
+                    <span style={{ color: 'var(--sl-color-gray-4)', marginLeft: '4px' }}>
+                      @{resourceDef.nugetPackage.split('@')[1]}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <button
@@ -183,41 +236,148 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
 
         {/* Content */}
         <div style={{ padding: '24px' }}>
+
+          {/* Resource Info */}
+          {resourceDef && (
+            <section style={{
+              marginBottom: '24px',
+              padding: '16px',
+              background: 'var(--sl-color-gray-6)',
+              borderRadius: '8px',
+              border: '1px solid var(--sl-color-gray-5)',
+            }}>
+              <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--sl-color-gray-2)', lineHeight: 1.5 }}>
+                {resourceDef.description}
+              </p>
+              <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px' }}>
+                <div>
+                  <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hosting Method</span>
+                  <div style={{ color: 'var(--sl-color-accent)', fontFamily: 'var(--sl-font-mono)', marginTop: '2px' }}>
+                    builder.{resourceDef.hostingMethod}()
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</span>
+                  <div style={{ color: 'var(--sl-color-white)', marginTop: '2px', textTransform: 'capitalize' }}>
+                    {resourceDef.category}
+                  </div>
+                </div>
+                {resourceDef.allowsDatabase && (
+                  <div>
+                    <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Child Resource</span>
+                    <div style={{ color: 'var(--sl-color-accent)', fontFamily: 'var(--sl-font-mono)', marginTop: '2px' }}>
+                      .{resourceDef.connectionMethod || 'AddDatabase'}()
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                {docsUrl && (
+                  <a
+                    href={docsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '12px',
+                      background: 'var(--sl-color-gray-5)',
+                      color: 'var(--sl-color-accent)',
+                      border: 'none',
+                      borderRadius: '4px',
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                    }}
+                  >
+                    📖 NuGet Package
+                  </a>
+                )}
+                <a
+                  href={`https://learn.microsoft.com/en-us/dotnet/aspire/search/?query=${encodeURIComponent(resourceDef.displayName)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    background: 'var(--sl-color-gray-5)',
+                    color: 'var(--sl-color-accent)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    textDecoration: 'none',
+                    fontWeight: 500,
+                  }}
+                >
+                  📚 Microsoft Learn
+                </a>
+              </div>
+            </section>
+          )}
+
+          {/* Example Code */}
+          {resourceDef?.exampleCode && (
+            <section style={{ marginBottom: '24px' }}>
+              <h3 style={{ ...sectionTitleStyle, marginBottom: '8px' }}>Example Code</h3>
+              <pre style={{
+                margin: 0,
+                padding: '12px',
+                background: 'var(--sl-color-gray-6)',
+                border: '1px solid var(--sl-color-gray-5)',
+                borderRadius: '6px',
+                fontSize: '12px',
+                fontFamily: 'var(--sl-font-mono)',
+                color: 'var(--sl-color-accent)',
+                lineHeight: 1.6,
+                overflowX: 'auto',
+                whiteSpace: 'pre-wrap',
+              }}>
+                {resourceDef.exampleCode}
+              </pre>
+            </section>
+          )}
+
+          {/* Instance Name */}
+          <section style={{ marginBottom: '24px' }}>
+            <h3 style={{ ...sectionTitleStyle, marginBottom: '8px' }}>Instance Name</h3>
+            <input
+              type="text"
+              value={instanceName}
+              onChange={(e) => setInstanceName(e.target.value)}
+              placeholder="my-resource"
+              style={{
+                ...inputStyle,
+                width: '100%',
+                boxSizing: 'border-box',
+              }}
+            />
+          </section>
+
+          {/* Database Name (for database resources) */}
+          {resourceDef?.allowsDatabase && (
+            <section style={{ marginBottom: '24px' }}>
+              <h3 style={{ ...sectionTitleStyle, marginBottom: '8px' }}>Database Name</h3>
+              <input
+                type="text"
+                value={databaseName}
+                onChange={(e) => setDatabaseName(e.target.value)}
+                placeholder="mydb"
+                style={{
+                  ...inputStyle,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <p style={{ fontSize: '12px', color: 'var(--sl-color-gray-3)', margin: '4px 0 0 0' }}>
+                Creates a child database via <code style={{ fontFamily: 'var(--sl-font-mono)', color: 'var(--sl-color-accent)' }}>
+                  .{resourceDef.connectionMethod || 'AddDatabase'}("{databaseName || 'mydb'}")
+                </code>
+              </p>
+            </section>
+          )}
+
           {/* Environment Variables */}
           <section style={{ marginBottom: '24px' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '12px',
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--sl-color-white)',
-                }}
-              >
-                Environment Variables
-              </h3>
-              <button
-                onClick={addEnvVar}
-                style={{
-                  padding: '4px 12px',
-                  fontSize: '12px',
-                  background: 'var(--sl-color-accent)',
-                  color: 'var(--sl-color-black)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-              >
-                + Add
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={sectionTitleStyle}>Environment Variables</h3>
+              <button onClick={addEnvVar} style={addButtonStyle}>+ Add</button>
             </div>
             {envVars.length === 0 ? (
               <p style={{ fontSize: '13px', color: 'var(--sl-color-gray-3)', margin: 0 }}>
@@ -232,47 +392,16 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                       placeholder="KEY"
                       value={env.key}
                       onChange={(e) => updateEnvVar(index, 'key', e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        fontSize: '13px',
-                        background: 'var(--sl-color-gray-6)',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-white)',
-                        fontFamily: 'var(--sl-font-mono)',
-                      }}
+                      style={inputStyle}
                     />
                     <input
                       type="text"
                       placeholder="value"
                       value={env.value}
                       onChange={(e) => updateEnvVar(index, 'value', e.target.value)}
-                      style={{
-                        flex: 2,
-                        padding: '8px',
-                        fontSize: '13px',
-                        background: 'var(--sl-color-gray-6)',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-white)',
-                        fontFamily: 'var(--sl-font-mono)',
-                      }}
+                      style={{ ...inputStyle, flex: 2 }}
                     />
-                    <button
-                      onClick={() => removeEnvVar(index)}
-                      style={{
-                        padding: '8px',
-                        background: 'transparent',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-gray-3)',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                      }}
-                    >
-                      ×
-                    </button>
+                    <button onClick={() => removeEnvVar(index)} style={removeButtonStyle}>×</button>
                   </div>
                 ))}
               </div>
@@ -282,39 +411,9 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
           {/* Port Mappings (for containers) */}
           {isContainer && (
             <section style={{ marginBottom: '24px' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '12px',
-                }}
-              >
-                <h3
-                  style={{
-                    margin: 0,
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: 'var(--sl-color-white)',
-                  }}
-                >
-                  Port Mappings
-                </h3>
-                <button
-                  onClick={addPort}
-                  style={{
-                    padding: '4px 12px',
-                    fontSize: '12px',
-                    background: 'var(--sl-color-accent)',
-                    color: 'var(--sl-color-black)',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: 500,
-                  }}
-                >
-                  + Add
-                </button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <h3 style={sectionTitleStyle}>Port Mappings</h3>
+                <button onClick={addPort} style={addButtonStyle}>+ Add</button>
               </div>
               {ports.length === 0 ? (
                 <p style={{ fontSize: '13px', color: 'var(--sl-color-gray-3)', margin: 0 }}>
@@ -329,16 +428,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                         placeholder="Container Port"
                         value={port.container}
                         onChange={(e) => updatePort(index, 'container', e.target.value)}
-                        style={{
-                          flex: 1,
-                          padding: '8px',
-                          fontSize: '13px',
-                          background: 'var(--sl-color-gray-6)',
-                          border: '1px solid var(--sl-color-gray-5)',
-                          borderRadius: '4px',
-                          color: 'var(--sl-color-white)',
-                          fontFamily: 'var(--sl-font-mono)',
-                        }}
+                        style={inputStyle}
                       />
                       <span style={{ color: 'var(--sl-color-gray-3)' }}>→</span>
                       <input
@@ -346,31 +436,9 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                         placeholder="Host Port"
                         value={port.host}
                         onChange={(e) => updatePort(index, 'host', e.target.value)}
-                        style={{
-                          flex: 1,
-                          padding: '8px',
-                          fontSize: '13px',
-                          background: 'var(--sl-color-gray-6)',
-                          border: '1px solid var(--sl-color-gray-5)',
-                          borderRadius: '4px',
-                          color: 'var(--sl-color-white)',
-                          fontFamily: 'var(--sl-font-mono)',
-                        }}
+                        style={inputStyle}
                       />
-                      <button
-                        onClick={() => removePort(index)}
-                        style={{
-                          padding: '8px',
-                          background: 'transparent',
-                          border: '1px solid var(--sl-color-gray-5)',
-                          borderRadius: '4px',
-                          color: 'var(--sl-color-gray-3)',
-                          cursor: 'pointer',
-                          fontSize: '16px',
-                        }}
-                      >
-                        ×
-                      </button>
+                      <button onClick={() => removePort(index)} style={removeButtonStyle}>×</button>
                     </div>
                   ))}
                 </div>
@@ -378,97 +446,57 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
             </section>
           )}
 
-          {/* Volume Mounts */}
+          {/* Bind Mounts */}
           <section style={{ marginBottom: '24px' }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '12px',
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  color: 'var(--sl-color-white)',
-                }}
-              >
-                Volume Mounts
-              </h3>
-              <button
-                onClick={addVolume}
-                style={{
-                  padding: '4px 12px',
-                  fontSize: '12px',
-                  background: 'var(--sl-color-accent)',
-                  color: 'var(--sl-color-black)',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-              >
-                + Add
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <h3 style={sectionTitleStyle}>Bind Mounts</h3>
+              <button onClick={addVolume} style={addButtonStyle}>+ Add</button>
             </div>
             {volumes.length === 0 ? (
               <p style={{ fontSize: '13px', color: 'var(--sl-color-gray-3)', margin: 0 }}>
-                No volumes configured
+                No bind mounts configured
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {volumes.map((volume, index) => (
                   <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <input
-                      type="text"
-                      placeholder="Source"
-                      value={volume.source}
-                      onChange={(e) => updateVolume(index, 'source', e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        fontSize: '13px',
-                        background: 'var(--sl-color-gray-6)',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-white)',
-                        fontFamily: 'var(--sl-font-mono)',
-                      }}
-                    />
+                    <div style={{ flex: 1, display: 'flex', gap: 0 }}>
+                      <input
+                        type="text"
+                        placeholder="Source path"
+                        value={volume.source}
+                        onChange={(e) => updateVolume(index, 'source', e.target.value)}
+                        style={{ ...inputStyle, borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
+                      />
+                      <button
+                        onClick={() => pickFolder(index)}
+                        title="Browse for folder"
+                        style={{
+                          padding: '8px 10px',
+                          fontSize: '14px',
+                          background: 'var(--sl-color-gray-5)',
+                          border: '1px solid var(--sl-color-gray-5)',
+                          borderTopRightRadius: '4px',
+                          borderBottomRightRadius: '4px',
+                          borderTopLeftRadius: 0,
+                          borderBottomLeftRadius: 0,
+                          color: 'var(--sl-color-white)',
+                          cursor: 'pointer',
+                          lineHeight: 1,
+                        }}
+                      >
+                        📁
+                      </button>
+                    </div>
                     <span style={{ color: 'var(--sl-color-gray-3)' }}>→</span>
                     <input
                       type="text"
-                      placeholder="Target"
+                      placeholder="Container path"
                       value={volume.target}
                       onChange={(e) => updateVolume(index, 'target', e.target.value)}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        fontSize: '13px',
-                        background: 'var(--sl-color-gray-6)',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-white)',
-                        fontFamily: 'var(--sl-font-mono)',
-                      }}
+                      style={inputStyle}
                     />
-                    <button
-                      onClick={() => removeVolume(index)}
-                      style={{
-                        padding: '8px',
-                        background: 'transparent',
-                        border: '1px solid var(--sl-color-gray-5)',
-                        borderRadius: '4px',
-                        color: 'var(--sl-color-gray-3)',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                      }}
-                    >
-                      ×
-                    </button>
+                    <button onClick={() => removeVolume(index)} style={removeButtonStyle}>×</button>
                   </div>
                 ))}
               </div>
@@ -477,16 +505,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
 
           {/* Replicas */}
           <section style={{ marginBottom: '24px' }}>
-            <h3
-              style={{
-                margin: '0 0 8px 0',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: 'var(--sl-color-white)',
-              }}
-            >
-              Replicas
-            </h3>
+            <h3 style={{ ...sectionTitleStyle, marginBottom: '8px' }}>Replicas</h3>
             <input
               type="number"
               min="1"
@@ -494,14 +513,8 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
               value={replicas}
               onChange={(e) => setReplicas(parseInt(e.target.value) || 1)}
               style={{
+                ...inputStyle,
                 width: '100px',
-                padding: '8px',
-                fontSize: '13px',
-                background: 'var(--sl-color-gray-6)',
-                border: '1px solid var(--sl-color-gray-5)',
-                borderRadius: '4px',
-                color: 'var(--sl-color-white)',
-                fontFamily: 'var(--sl-font-mono)',
               }}
             />
           </section>
@@ -509,36 +522,19 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
           {/* Persistent (for databases) */}
           {isDatabase && (
             <section style={{ marginBottom: '24px' }}>
-              <label
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer',
-                }}
-              >
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                 <input
                   type="checkbox"
                   checked={persistent}
                   onChange={(e) => setPersistent(e.target.checked)}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer',
-                  }}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                 />
-                <span
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 600,
-                    color: 'var(--sl-color-white)',
-                  }}
-                >
+                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--sl-color-white)' }}>
                   Persistent Container Lifetime
                 </span>
               </label>
               <p style={{ fontSize: '12px', color: 'var(--sl-color-gray-3)', margin: '4px 0 0 24px' }}>
-                Data will persist across container restarts
+                Adds <code style={{ fontFamily: 'var(--sl-font-mono)', color: 'var(--sl-color-accent)' }}>.WithLifetime(ContainerLifetime.Persistent)</code> — data persists across restarts
               </p>
             </section>
           )}

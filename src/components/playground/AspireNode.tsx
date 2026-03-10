@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useRef } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 
@@ -19,15 +19,34 @@ export interface AspireNodeData extends Record<string, unknown> {
 
 export type AspireNode = Node<AspireNodeData, 'aspireNode'>;
 
+// Prevent keyboard events from reaching the canvas/shortcut handler
+function stopKeyPropagation(e: React.KeyboardEvent) {
+  e.stopPropagation();
+}
+
 const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
   const [isEditing, setIsEditing] = useState(false);
   const [instanceName, setInstanceName] = useState(data.instanceName || '');
   const [databaseName, setDatabaseName] = useState(data.databaseName || '');
+  const instanceNameRef = useRef<HTMLInputElement>(null);
 
-  const handleDoubleClick = useCallback(() => {
-    // Trigger config panel via custom event
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    // Only open config if the double-click wasn't on an input/editable area
+    const target = e.target as HTMLElement;
+    if (target instanceof HTMLInputElement || target.closest('[data-editable]')) {
+      return;
+    }
     window.dispatchEvent(new CustomEvent('openNodeConfig', { detail: { nodeId: id } }));
   }, [id]);
+
+  const startEditing = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditing(true);
+    // Select text after React renders the input
+    requestAnimationFrame(() => {
+      instanceNameRef.current?.select();
+    });
+  }, []);
 
   const handleInstanceNameBlur = useCallback(() => {
     setIsEditing(false);
@@ -47,11 +66,16 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
 
   const handleInstanceNameKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      e.stopPropagation();
       if (e.key === 'Enter') {
         handleInstanceNameBlur();
       }
+      if (e.key === 'Escape') {
+        setInstanceName(data.instanceName || '');
+        setIsEditing(false);
+      }
     },
-    [handleInstanceNameBlur]
+    [handleInstanceNameBlur, data.instanceName]
   );
 
   return (
@@ -116,15 +140,17 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
         </span>
       </div>
 
-      <div style={{ marginBottom: data.allowsDatabase ? '8px' : '0' }}>
+      <div style={{ marginBottom: data.allowsDatabase ? '8px' : '0' }} data-editable>
         {isEditing ? (
           <input
+            ref={instanceNameRef}
             type="text"
             value={instanceName}
             onChange={(e) => setInstanceName(e.target.value)}
             onBlur={handleInstanceNameBlur}
             onKeyDown={handleInstanceNameKeyDown}
             autoFocus
+            onFocus={(e) => e.currentTarget.select()}
             style={{
               width: '100%',
               padding: '4px 8px',
@@ -139,7 +165,7 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
           />
         ) : (
           <div
-            onClick={() => setIsEditing(true)}
+            onClick={startEditing}
             style={{
               cursor: 'text',
               padding: '4px 8px',
@@ -165,7 +191,7 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
       </div>
 
       {data.allowsDatabase && (
-        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--sl-node-border)' }}>
+        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--sl-node-border)' }} data-editable>
           <label
             style={{
               display: 'block',
@@ -182,6 +208,7 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
             type="text"
             value={databaseName}
             onChange={handleDatabaseNameChange}
+            onKeyDown={stopKeyPropagation}
             placeholder="database"
             style={{
               width: '100%',

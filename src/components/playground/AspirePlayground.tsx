@@ -334,8 +334,12 @@ export default function AspirePlayground() {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip shortcuts when user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      const isEditing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.isContentEditable;
+
       // Delete
-      if (e.key === 'Delete' || e.key === 'Backspace') {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && !isEditing) {
         const selectedNodes = nodes.filter(n => n.selected);
         const selectedEdges = edges.filter(e => e.selected);
         
@@ -347,8 +351,8 @@ export default function AspirePlayground() {
         }
       }
 
-      // Undo (Ctrl+Z)
-      if (e.ctrlKey && e.key === 'z' && !e.shiftKey && historyIndex > 0) {
+      // Undo (Ctrl+Z) — let browser handle it when editing text
+      if (e.ctrlKey && e.key === 'z' && !e.shiftKey && !isEditing && historyIndex > 0) {
         e.preventDefault();
         const prevState = history[historyIndex - 1];
         setNodes(prevState.nodes);
@@ -357,7 +361,7 @@ export default function AspirePlayground() {
       }
 
       // Redo (Ctrl+Y or Ctrl+Shift+Z)
-      if ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z')) {
+      if (!isEditing && ((e.ctrlKey && e.key === 'y') || (e.ctrlKey && e.shiftKey && e.key === 'z'))) {
         if (historyIndex < history.length - 1) {
           e.preventDefault();
           const nextState = history[historyIndex + 1];
@@ -367,16 +371,16 @@ export default function AspirePlayground() {
         }
       }
 
-      // Copy (Ctrl+C)
-      if (e.ctrlKey && e.key === 'c') {
+      // Copy (Ctrl+C) — only intercept when not editing text
+      if (e.ctrlKey && e.key === 'c' && !isEditing) {
         const selectedNodes = nodes.filter(n => n.selected);
         if (selectedNodes.length > 0) {
           setCopiedNodes(selectedNodes);
         }
       }
 
-      // Paste (Ctrl+V)
-      if (e.ctrlKey && e.key === 'v' && copiedNodes.length > 0) {
+      // Paste (Ctrl+V) — only intercept when not editing text
+      if (e.ctrlKey && e.key === 'v' && !isEditing && copiedNodes.length > 0) {
         const newNodes = copiedNodes.map(node => ({
           ...node,
           id: getNodeId(),
