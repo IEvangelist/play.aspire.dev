@@ -1,0 +1,81 @@
+{
+  "version": "13.1.1",
+  "apiRipperPath": "D:\\GitHub\\api-ripper",
+  "packages": [
+    "Aspire.Hosting.DevTunnels",
+    "Aspire.Hosting.Docker",
+    "Aspire.Hosting.Elasticsearch",
+    "Aspire.Hosting.Garnet",
+    "Aspire.Hosting.GitHub.Models",
+    "Aspire.Hosting.JavaScript",
+    "Aspire.Hosting.Kafka",
+    "Aspire.Hosting.Keycloak",
+    "Aspire.Hosting.Kubernetes",
+    "Aspire.Hosting.Maui",
+    "Aspire.Hosting.Milvus",
+    "Aspire.Hosting.MongoDB",
+    "Aspire.Hosting.MySql",
+    "Aspire.Hosting.Nats",
+    "Aspire.Hosting.Ollama",
+    "Aspire.Hosting.OpenAI",
+    "Aspire.Hosting.Oracle",
+    "Aspire.Hosting.Orleans",
+    "Aspire.Hosting.PostgreSQL",
+    "Aspire.Hosting.Python",
+    "Aspire.Hosting.Qdrant",
+    "Aspire.Hosting.RabbitMQ",
+    "Aspire.Hosting.Redis",
+    "Aspire.Hosting.Seq",
+    "Aspire.Hosting.SqlServer",
+    "Aspire.Hosting.Valkey",
+    "Aspire.Hosting.Yarp"
+  ],
+  "categoryKeywords": {
+    "database": ["database", "sql", "nosql", "document-database", "relational-database", "vector-database", "search-engine"],
+    "cache": ["cache", "caching", "in-memory"],
+    "messaging": ["messaging", "message-queue", "queue", "broker", "event-streaming", "pubsub"],
+    "ai": ["ai", "ml", "llm", "machine-learning", "artificial-intelligence", "openai", "ollama", "models"],
+    "project": ["javascript", "python", "nodejs", "dotnet", "maui", "mobile"],
+    "compute": ["container", "docker", "kubernetes", "proxy", "reverse-proxy", "tunnel", "devtunnel", "orleans", "serverless"]
+  },
+  "categoryOverrides": {
+  },
+  "categoryColors": {
+    "database": "#107C10",
+    "cache": "#FFB900",
+    "messaging": "#E74856",
+    "ai": "#00BCF2",
+    "project": "#0078D4",
+    "compute": "#8764B8"
+  },
+  "colorOverrides": {
+  },
+  "manualResources": [
+    {
+      "id": "dotnet-project",
+      "name": "dotnet-project",
+      "displayName": "C# Project",
+      "category": "project",
+      "iconFile": "csharp.svg",
+      "color": "#512BD4",
+      "description": "ASP.NET Core API, Web App, or Worker Service",
+      "package": "Aspire.Hosting",
+      "hostingMethod": "AddProject",
+      "languages": ["C#"],
+      "exampleCode": "builder.AddProject<Projects.ApiService>(\"api\")"
+    },
+    {
+      "id": "container",
+      "name": "container",
+      "displayName": "Container",
+      "category": "compute",
+      "iconFile": "docker.svg",
+      "color": "#2496ED",
+      "description": "Custom Docker container image",
+      "package": "Aspire.Hosting",
+      "hostingMethod": "AddContainer",
+      "languages": ["Any"],
+      "exampleCode": "builder.AddContainer(\"myapp\", \"myregistry/myapp\", \"latest\")\n    .WithHttpEndpoint(targetPort: 8080)"
+    }
+  ]
+}

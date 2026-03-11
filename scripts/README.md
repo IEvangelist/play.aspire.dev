@@ -4,82 +4,77 @@ This directory contains scripts for automatically generating Aspire resource def
 
 ## Overview
 
-The Aspire Playground uses a **dual-source** approach for resource data:
+The generation pipeline is fully **data-driven**:
 
-1. **Technical Data**: Extracted from NuGet packages using `api-ripper`
-2. **Human-Readable Content**: Curated descriptions, icons, colors, and examples
+1. **Configuration** — `resource-config.json` declares packages, version, and category inference rules
+2. **NuGet API** — descriptions, icons, and tags are fetched from NuGet.org at generation time
+3. **api-ripper** — `Add*` extension methods, parameters, and XML doc comments are extracted from each package
+4. **Category inference** — NuGet tags are matched against configurable keyword lists
+5. **Icon download** — package icons are pulled from the NuGet flat container and saved to `src/assets/icons/`
 
-## Scripts
+No hardcoded metadata is needed — everything flows from the packages themselves.
 
-### `generate-resources.js`
+## Files
 
-Generates `src/data/aspire-resources.ts` from NuGet packages.
+| File | Purpose |
+|------|--------|
+| `generate-resources.js` | Main generation script |
+| `resource-config.json` | Package list, version, category keywords, color/category overrides, manual resources |
 
-**Prerequisites:**
-- api-ripper cloned at `E:\GitHub\api-ripper`
-- Node.js installed
+## Usage
 
-**Usage:**
 ```bash
 npm run generate-resources
 ```
 
-**What it does:**
-1. Reads package list from `PACKAGES` array
-2. Uses api-ripper to extract API information
-3. Merges with human-curated metadata from `RESOURCE_METADATA`
-4. Generates TypeScript definitions
+### Environment variable overrides
+
+| Variable | Default | Description |
+|----------|---------|------------|
+| `API_RIPPER_PATH` | Value from `resource-config.json` | Path to api-ripper clone |
+| `ASPIRE_VERSION` | Value from `resource-config.json` | NuGet package version to target |
 
 ## Adding New Resources
 
-To add a new Aspire resource:
+1. Add the NuGet package name to the `packages` array in `resource-config.json`
+2. Run `npm run generate-resources`
 
-1. Add the NuGet package name to `PACKAGES` array
-2. Add metadata to `RESOURCE_METADATA` object:
-   ```javascript
-   'ResourceName': {
-     icon: '🎯',
-     color: '#FF0000',
-     category: 'database',
-     displayName: 'Display Name',
-     description: 'Human-readable description',
-     allowsDatabase: false,
-   }
-   ```
-3. Run `npm run generate-resources`
+That's it — the script will fetch the description, icon, and tags from NuGet, extract the API methods via api-ripper, and infer the category automatically.
+
+If automatic category detection doesn't work for a package, add an entry to `categoryOverrides`:
+
+```json
+"categoryOverrides": {
+  "MyNewThing": "messaging"
+}
+```
+
+For resources that don't come from a NuGet package (e.g. generic container, C# project), add them to the `manualResources` array in the config.
+
+## Configuration Reference (`resource-config.json`)
+
+| Key | Type | Description |
+|-----|------|------------|
+| `version` | string | Aspire SDK / NuGet package version |
+| `apiRipperPath` | string | Path to api-ripper (overridden by `API_RIPPER_PATH` env var) |
+| `packages` | string[] | NuGet packages to process |
+| `categoryKeywords` | object | Maps category names to arrays of tag keywords for inference |
+| `categoryOverrides` | object | Package suffix → explicit category (bypasses inference) |
+| `categoryColors` | object | Default hex color per category |
+| `colorOverrides` | object | Resource name → explicit hex color |
+| `manualResources` | array | Resources defined directly in config (not from NuGet) |
 
 ## Resource Categories
 
-- **project**: Application projects (C#, Node.js, Python, etc.)
-- **database**: Relational and NoSQL databases
-- **cache**: In-memory caching systems
-- **messaging**: Message brokers and event streams
-- **ai**: AI/ML services
-- **compute**: Containers and serverless
-
-## Metadata Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique identifier (lowercase) |
-| `name` | string | Default instance name |
-| `displayName` | string | Human-readable name |
-| `category` | string | Resource category |
-| `icon` | string | Emoji icon |
-| `color` | string | Hex color code |
-| `description` | string | Short description |
-| `package` | string | NuGet package name |
-| `hostingMethod` | string | How resource is hosted |
-| `languages` | string[] | Supported languages |
-| `connectionMethod` | string? | How to connect |
-| `allowsDatabase` | boolean? | Supports database creation |
-| `exampleCode` | string | Code example |
-| `nugetPackage` | string? | Package with version |
+- **project** — Application projects (C#, Node.js, Python, etc.)
+- **database** — Relational and NoSQL databases
+- **cache** — In-memory caching systems
+- **messaging** — Message brokers and event streams
+- **ai** — AI/ML services
+- **compute** — Containers, proxies, and infrastructure
 
 ## Future Enhancements
 
-- [ ] Fetch package metadata from NuGet.org API
-- [ ] Extract descriptions from XML documentation
-- [ ] Auto-generate example code from method signatures
 - [ ] Support for custom/community packages
 - [ ] Versioned resource definitions
+- [ ] Parallel NuGet API + api-ripper execution
