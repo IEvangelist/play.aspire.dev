@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import csharpIcon from '../../assets/icons/csharp.svg';
 import dockerIcon from '../../assets/icons/docker.svg';
+import typescriptIcon from '../../assets/icons/typescript-icon.svg';
 
-export type ImportType = 'apphost' | 'docker-compose' | 'dockerfile';
+export type ImportType = 'apphost' | 'apphost-ts' | 'docker-compose' | 'dockerfile';
 
 interface ImportModalProps {
   isOpen: boolean;
@@ -23,10 +24,18 @@ const importOptions: ImportOption[] = [
   {
     id: 'apphost',
     title: 'AppHost.cs',
-    description: 'Import from an existing .NET Aspire AppHost Program.cs file',
+    description: 'Import from an existing C# Aspire AppHost file',
     icon: csharpIcon,
     accept: '.cs',
     color: '#512BD4',
+  },
+  {
+    id: 'apphost-ts',
+    title: 'apphost.ts',
+    description: 'Import from an existing TypeScript Aspire AppHost file',
+    icon: typescriptIcon,
+    accept: '.ts',
+    color: '#3178C6',
   },
   {
     id: 'docker-compose',
@@ -67,6 +76,11 @@ export default function ImportModal({ isOpen, onClose, onImport }: ImportModalPr
     // Validate file type
     if (selectedType === 'apphost' && !file.name.endsWith('.cs')) {
       setError('Please select a .cs file');
+      return;
+    }
+
+    if (selectedType === 'apphost-ts' && !file.name.endsWith('.ts')) {
+      setError('Please select a .ts file');
       return;
     }
     

@@ -657,6 +657,7 @@ export default function AspirePlayground() {
     try {
       switch (type) {
         case 'apphost':
+        case 'apphost-ts':
           result = parseAppHost(content);
           break;
         case 'docker-compose':
