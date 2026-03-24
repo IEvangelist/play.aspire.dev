@@ -438,6 +438,71 @@ export const templates: Template[] = [
       },
     ],
   },
+  {
+    id: 'todo-app',
+    name: 'Todo App (Node + React)',
+    description: 'PostgreSQL database, Express API, and React Vite frontend for a todo list',
+    category: 'fullstack',
+    icon: '✅',
+    tags: ['todo', 'node', 'express', 'react', 'vite', 'postgres', 'fullstack'],
+    nodes: [
+      {
+        id: 'node_0',
+        type: 'aspire',
+        position: { x: 80, y: 120 },
+        data: {
+          resourceType: 'postgres',
+          label: 'PostgreSQL',
+          icon: '🐘',
+          color: '#336791',
+          instanceName: 'postgres',
+          databaseName: 'tododb',
+          allowsDatabase: true,
+          persistent: true,
+        },
+      },
+      {
+        id: 'node_1',
+        type: 'aspire',
+        position: { x: 420, y: 120 },
+        data: {
+          resourceType: 'nodeapp',
+          label: 'NodeApp',
+          icon: '🟢',
+          color: '#539E43',
+          instanceName: 'todo-api',
+        },
+      },
+      {
+        id: 'node_2',
+        type: 'aspire',
+        position: { x: 760, y: 120 },
+        data: {
+          resourceType: 'viteapp',
+          label: 'Vite App',
+          icon: '⚡',
+          color: '#646CFF',
+          instanceName: 'todo-app',
+        },
+      },
+    ],
+    edges: [
+      {
+        id: 'edge_0',
+        source: 'node_0',
+        target: 'node_1',
+        animated: true,
+        style: { stroke: '#888', strokeWidth: 2 },
+      },
+      {
+        id: 'edge_1',
+        source: 'node_1',
+        target: 'node_2',
+        animated: true,
+        style: { stroke: '#888', strokeWidth: 2 },
+      },
+    ],
+  },
 ];
 
 export const templateCategories = [
