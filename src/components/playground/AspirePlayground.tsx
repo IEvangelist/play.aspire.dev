@@ -194,6 +194,15 @@ export default function AspirePlayground() {
       if (sharedState.language) {
         setAppHostLanguage(sharedState.language);
       }
+      if (sharedState.paletteCollapsed !== undefined) {
+        setIsPaletteCollapsed(sharedState.paletteCollapsed);
+      }
+      if (sharedState.codePreviewWidth !== undefined) {
+        setCodePreviewWidth(sharedState.codePreviewWidth);
+      }
+      if (sharedState.toolbarCollapsed !== undefined) {
+        setIsToolbarCollapsed(sharedState.toolbarCollapsed);
+      }
       setHasLoadedFromUrl(true);
       return;
     }
@@ -316,9 +325,13 @@ export default function AspirePlayground() {
     return generateAppHostCode(nodes, edges, appHostLanguage);
   }, [nodes, edges, appHostLanguage]);
 
-  // Share functionality — encodes full canvas state (nodes, edges, positions, language)
+  // Share functionality — encodes full canvas state (nodes, edges, positions, language, UI layout)
   const handleShare = useCallback(() => {
-    const encoded = encodePlaygroundState(nodes, edges, appHostLanguage);
+    const encoded = encodePlaygroundState(nodes, edges, appHostLanguage, {
+      paletteCollapsed: isPaletteCollapsed,
+      codePreviewWidth,
+      toolbarCollapsed: isToolbarCollapsed,
+    });
     const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
@@ -328,7 +341,7 @@ export default function AspirePlayground() {
       // Fallback: show the URL in a prompt
       prompt('Share this URL:', shareUrl);
     });
-  }, [nodes, edges, appHostLanguage]);
+  }, [nodes, edges, appHostLanguage, isPaletteCollapsed, codePreviewWidth, isToolbarCollapsed]);
 
   // Get SVG URL for embedding
   const handleGetSvgUrl = useCallback(() => {
