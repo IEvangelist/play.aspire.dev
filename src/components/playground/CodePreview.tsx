@@ -42,6 +42,12 @@ type Tab = CodePreviewTab;
 export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme, appHostLanguage, onLanguageChange, initialTab, onTabChange, initialCollapsed, onCollapsedChange }: CodePreviewProps) {
   const appHostFileName = appHostLanguage === 'typescript' ? 'apphost.ts' : 'AppHost.cs';
   const [activeTab, setActiveTabState] = useState<Tab>((initialTab as Tab) || 'apphost');
+  // Sync from parent when initialTab changes (e.g. URL load)
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTabState(initialTab as Tab);
+    }
+  }, [initialTab]);
   const setActiveTab = (tab: Tab) => {
     setActiveTabState(tab);
     onTabChange?.(tab);
@@ -50,6 +56,12 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
   const [copied, setCopied] = useState(false);
   const [copiedDeployIndex, setCopiedDeployIndex] = useState<number | null>(null);
   const [isCollapsed, setIsCollapsedState] = useState(initialCollapsed ?? true);
+  // Sync from parent when initialCollapsed changes (e.g. URL load)
+  useEffect(() => {
+    if (initialCollapsed !== undefined) {
+      setIsCollapsedState(initialCollapsed);
+    }
+  }, [initialCollapsed]);
   const setIsCollapsed = (collapsed: boolean) => {
     setIsCollapsedState(collapsed);
     onCollapsedChange?.(collapsed);

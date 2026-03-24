@@ -92,8 +92,20 @@ export default function AspirePlayground() {
   const [history, setHistory] = useState<{ nodes: Node<AspireNodeData>[]; edges: Edge[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [copiedNodes, setCopiedNodes] = useState<Node<AspireNodeData>[]>([]);
-  const [codePreviewTab, setCodePreviewTab] = useState<string>('apphost');
-  const [codePreviewCollapsed, setCodePreviewCollapsed] = useState(true);
+  const [codePreviewTab, setCodePreviewTab] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aspire-playground-code-tab');
+      if (saved) return saved;
+    }
+    return 'apphost';
+  });
+  const [codePreviewCollapsed, setCodePreviewCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aspire-playground-code-collapsed');
+      if (saved !== null) return saved === 'true';
+    }
+    return true;
+  });
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
@@ -155,6 +167,15 @@ export default function AspirePlayground() {
   useEffect(() => {
     localStorage.setItem('aspire-playground-toolbar-collapsed', isToolbarCollapsed.toString());
   }, [isToolbarCollapsed]);
+
+  // Save code preview state to localStorage
+  useEffect(() => {
+    localStorage.setItem('aspire-playground-code-collapsed', codePreviewCollapsed.toString());
+  }, [codePreviewCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('aspire-playground-code-tab', codePreviewTab);
+  }, [codePreviewTab]);
 
   // Save keyboard legend preference to localStorage
   useEffect(() => {
