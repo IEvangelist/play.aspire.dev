@@ -20,7 +20,7 @@ export interface GeneratedCode {
   language: AppHostLanguage;
 }
 
-const SDK_VERSION = '13.1.1';
+const SDK_VERSION = '13.2.0';
 
 // Look up the resource definition by its ID
 function findResourceDef(resourceType: string): AspireResource | undefined {

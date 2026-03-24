@@ -2,7 +2,7 @@
  * AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
  *
  * Generated: 2026-02-26T17:35:09.520Z
- * Aspire SDK version: 13.1.1
+ * Aspire SDK version: 13.2.0
  * Source: NuGet packages via api-ripper + NuGet API metadata
  *
  * To regenerate: npm run generate-resources
@@ -73,7 +73,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddJavaScriptApp',
     languages: ['C#'],
     exampleCode: 'var javascriptapp = builder.AddJavaScriptApp("javascriptapp");',
-    nugetPackage: 'Aspire.Hosting.JavaScript@13.1.1',
+    nugetPackage: 'Aspire.Hosting.JavaScript@13.2.0',
   },
   {
     id: 'maui',
@@ -87,7 +87,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddMaui',
     languages: ['C#'],
     exampleCode: 'var maui = builder.AddMaui("maui");',
-    nugetPackage: 'Aspire.Hosting.Maui@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Maui@13.2.0',
   },
   {
     id: 'nodeapp',
@@ -101,7 +101,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddNodeApp',
     languages: ['C#'],
     exampleCode: 'var nodeapp = builder.AddNodeApp("nodeapp");',
-    nugetPackage: 'Aspire.Hosting.JavaScript@13.1.1',
+    nugetPackage: 'Aspire.Hosting.JavaScript@13.2.0',
   },
   {
     id: 'pythonapp',
@@ -115,7 +115,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddPythonApp',
     languages: ['C#'],
     exampleCode: 'var pythonapp = builder.AddPythonApp("pythonapp");',
-    nugetPackage: 'Aspire.Hosting.Python@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Python@13.2.0',
   },
   {
     id: 'pythonexecutable',
@@ -129,7 +129,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddPythonExecutable',
     languages: ['C#'],
     exampleCode: 'var pythonexecutable = builder.AddPythonExecutable("pythonexecutable");',
-    nugetPackage: 'Aspire.Hosting.Python@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Python@13.2.0',
   },
   {
     id: 'pythonmodule',
@@ -143,7 +143,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddPythonModule',
     languages: ['C#'],
     exampleCode: 'var pythonmodule = builder.AddPythonModule("pythonmodule");',
-    nugetPackage: 'Aspire.Hosting.Python@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Python@13.2.0',
   },
   {
     id: 'uvicornapp',
@@ -157,7 +157,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddUvicornApp',
     languages: ['C#'],
     exampleCode: 'var uvicornapp = builder.AddUvicornApp("uvicornapp");',
-    nugetPackage: 'Aspire.Hosting.Python@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Python@13.2.0',
   },
   {
     id: 'viteapp',
@@ -171,7 +171,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddViteApp',
     languages: ['C#'],
     exampleCode: 'var viteapp = builder.AddViteApp("viteapp");',
-    nugetPackage: 'Aspire.Hosting.JavaScript@13.1.1',
+    nugetPackage: 'Aspire.Hosting.JavaScript@13.2.0',
   },
   {
     id: 'milvus',
@@ -187,7 +187,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var milvus = builder.AddMilvus("milvus");\nvar db = milvus.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.Milvus@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Milvus@13.2.0',
   },
   {
     id: 'mongodb',
@@ -203,7 +203,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var mongodb = builder.AddMongoDB("mongodb");\nvar db = mongodb.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.MongoDB@13.1.1',
+    nugetPackage: 'Aspire.Hosting.MongoDB@13.2.0',
   },
   {
     id: 'mysql',
@@ -219,7 +219,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var mysql = builder.AddMySql("mysql");\nvar db = mysql.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.MySql@13.1.1',
+    nugetPackage: 'Aspire.Hosting.MySql@13.2.0',
   },
   {
     id: 'oracle',
@@ -235,7 +235,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var oracle = builder.AddOracle("oracle");\nvar db = oracle.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.Oracle@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Oracle@13.2.0',
   },
   {
     id: 'postgres',
@@ -251,7 +251,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var postgres = builder.AddPostgres("postgres");\nvar db = postgres.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.PostgreSQL@13.1.1',
+    nugetPackage: 'Aspire.Hosting.PostgreSQL@13.2.0',
   },
   {
     id: 'qdrant',
@@ -265,7 +265,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddQdrant',
     languages: ['C#'],
     exampleCode: 'var qdrant = builder.AddQdrant("qdrant");',
-    nugetPackage: 'Aspire.Hosting.Qdrant@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Qdrant@13.2.0',
   },
   {
     id: 'sqlserver',
@@ -281,7 +281,7 @@ export const aspireResources: AspireResource[] = [
     connectionMethod: 'AddDatabase',
     allowsDatabase: true,
     exampleCode: 'var sqlserver = builder.AddSqlServer("sqlserver");\nvar db = sqlserver.AddDatabase("mydb");',
-    nugetPackage: 'Aspire.Hosting.SqlServer@13.1.1',
+    nugetPackage: 'Aspire.Hosting.SqlServer@13.2.0',
   },
   {
     id: 'garnet',
@@ -295,7 +295,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddGarnet',
     languages: ['C#'],
     exampleCode: 'var garnet = builder.AddGarnet("garnet");',
-    nugetPackage: 'Aspire.Hosting.Garnet@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Garnet@13.2.0',
   },
   {
     id: 'redis',
@@ -309,7 +309,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddRedis',
     languages: ['C#'],
     exampleCode: 'var redis = builder.AddRedis("redis");',
-    nugetPackage: 'Aspire.Hosting.Redis@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Redis@13.2.0',
   },
   {
     id: 'valkey',
@@ -323,7 +323,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddValkey',
     languages: ['C#'],
     exampleCode: 'var valkey = builder.AddValkey("valkey");',
-    nugetPackage: 'Aspire.Hosting.Valkey@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Valkey@13.2.0',
   },
   {
     id: 'kafka',
@@ -337,7 +337,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddKafka',
     languages: ['C#'],
     exampleCode: 'var kafka = builder.AddKafka("kafka");',
-    nugetPackage: 'Aspire.Hosting.Kafka@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Kafka@13.2.0',
   },
   {
     id: 'nats',
@@ -351,7 +351,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddNats',
     languages: ['C#'],
     exampleCode: 'var nats = builder.AddNats("nats");',
-    nugetPackage: 'Aspire.Hosting.Nats@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Nats@13.2.0',
   },
   {
     id: 'orleans',
@@ -365,7 +365,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddOrleans',
     languages: ['C#'],
     exampleCode: 'var orleans = builder.AddOrleans("orleans");',
-    nugetPackage: 'Aspire.Hosting.Orleans@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Orleans@13.2.0',
   },
   {
     id: 'rabbitmq',
@@ -379,7 +379,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddRabbitMQ',
     languages: ['C#'],
     exampleCode: 'var rabbitmq = builder.AddRabbitMQ("rabbitmq");',
-    nugetPackage: 'Aspire.Hosting.RabbitMQ@13.1.1',
+    nugetPackage: 'Aspire.Hosting.RabbitMQ@13.2.0',
   },
   {
     id: 'githubmodel',
@@ -393,7 +393,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddGitHubModel',
     languages: ['C#'],
     exampleCode: 'var githubmodel = builder.AddGitHubModel("githubmodel");',
-    nugetPackage: 'Aspire.Hosting.GitHub.Models@13.1.1',
+    nugetPackage: 'Aspire.Hosting.GitHub.Models@13.2.0',
   },
   {
     id: 'ollama',
@@ -407,7 +407,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddOllama',
     languages: ['C#'],
     exampleCode: 'var ollama = builder.AddOllama("ollama");',
-    nugetPackage: 'Aspire.Hosting.Ollama@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Ollama@13.2.0',
   },
   {
     id: 'openai',
@@ -421,7 +421,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddOpenAI',
     languages: ['C#'],
     exampleCode: 'var openai = builder.AddOpenAI("openai");',
-    nugetPackage: 'Aspire.Hosting.OpenAI@13.1.1',
+    nugetPackage: 'Aspire.Hosting.OpenAI@13.2.0',
   },
   {
     id: 'container',
@@ -448,7 +448,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddDevTunnel',
     languages: ['C#'],
     exampleCode: 'var devtunnel = builder.AddDevTunnel("devtunnel");',
-    nugetPackage: 'Aspire.Hosting.DevTunnels@13.1.1',
+    nugetPackage: 'Aspire.Hosting.DevTunnels@13.2.0',
   },
   {
     id: 'docker',
@@ -462,7 +462,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddDocker',
     languages: ['C#'],
     exampleCode: 'var docker = builder.AddDocker("docker");',
-    nugetPackage: 'Aspire.Hosting.Docker@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Docker@13.2.0',
   },
   {
     id: 'elasticsearch',
@@ -476,7 +476,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddElasticsearch',
     languages: ['C#'],
     exampleCode: 'var elasticsearch = builder.AddElasticsearch("elasticsearch");',
-    nugetPackage: 'Aspire.Hosting.Elasticsearch@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Elasticsearch@13.2.0',
   },
   {
     id: 'keycloak',
@@ -490,7 +490,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddKeycloak',
     languages: ['C#'],
     exampleCode: 'var keycloak = builder.AddKeycloak("keycloak");',
-    nugetPackage: 'Aspire.Hosting.Keycloak@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Keycloak@13.2.0',
   },
   {
     id: 'kubernetes',
@@ -504,7 +504,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddKubernetes',
     languages: ['C#'],
     exampleCode: 'var kubernetes = builder.AddKubernetes("kubernetes");',
-    nugetPackage: 'Aspire.Hosting.Kubernetes@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Kubernetes@13.2.0',
   },
   {
     id: 'seq',
@@ -518,7 +518,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddSeq',
     languages: ['C#'],
     exampleCode: 'var seq = builder.AddSeq("seq");',
-    nugetPackage: 'Aspire.Hosting.Seq@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Seq@13.2.0',
   },
   {
     id: 'yarp',
@@ -532,7 +532,7 @@ export const aspireResources: AspireResource[] = [
     hostingMethod: 'AddYarp',
     languages: ['C#'],
     exampleCode: 'var yarp = builder.AddYarp("yarp");',
-    nugetPackage: 'Aspire.Hosting.Yarp@13.1.1',
+    nugetPackage: 'Aspire.Hosting.Yarp@13.2.0',
   }
 ];
 
