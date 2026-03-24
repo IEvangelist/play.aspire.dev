@@ -46,7 +46,7 @@ const addButtonStyle: React.CSSProperties = {
   padding: '4px 12px',
   fontSize: '12px',
   background: 'var(--sl-color-accent)',
-  color: 'var(--sl-color-black)',
+  color: '#fff',
   border: 'none',
   borderRadius: '4px',
   cursor: 'pointer',
@@ -216,7 +216,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                 >
                   {resourceDef.package}
                   {resourceDef.nugetPackage && (
-                    <span style={{ color: 'var(--sl-color-gray-4)', marginLeft: '4px' }}>
+                    <span style={{ color: 'var(--sl-color-gray-3)', marginLeft: '4px' }}>
                       @{resourceDef.nugetPackage.split('@')[1]}
                     </span>
                   )}
@@ -257,20 +257,20 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
               </p>
               <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px' }}>
                 <div>
-                  <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hosting Method</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hosting Method</span>
                   <div style={{ color: 'var(--sl-color-accent)', fontFamily: 'var(--sl-font-mono)', marginTop: '2px' }}>
                     builder.{resourceDef.hostingMethod}()
                   </div>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Category</span>
                   <div style={{ color: 'var(--sl-color-white)', marginTop: '2px', textTransform: 'capitalize' }}>
                     {resourceDef.category}
                   </div>
                 </div>
                 {resourceDef.allowsDatabase && (
                   <div>
-                    <span style={{ color: 'var(--sl-color-gray-4)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Child Resource</span>
+                    <span style={{ color: 'var(--sl-color-gray-3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Child Resource</span>
                     <div style={{ color: 'var(--sl-color-accent)', fontFamily: 'var(--sl-font-mono)', marginTop: '2px' }}>
                       .{resourceDef.connectionMethod || 'AddDatabase'}()
                     </div>
@@ -577,7 +577,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
               padding: '8px 16px',
               fontSize: '14px',
               background: 'var(--sl-color-accent)',
-              color: 'var(--sl-color-black)',
+              color: '#fff',
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',

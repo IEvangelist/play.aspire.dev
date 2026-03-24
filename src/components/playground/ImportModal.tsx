@@ -370,7 +370,7 @@ export default function ImportModal({ isOpen, onClose, onImport }: ImportModalPr
                 or click to browse
               </p>
               <p style={{
-                color: 'var(--sl-color-gray-4)',
+                color: 'var(--sl-color-gray-3)',
                 fontSize: '12px',
               }}>
                 {selectedType === 'apphost' && 'Accepts: .cs files'}

@@ -366,7 +366,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     padding: '4px 10px',
                     fontSize: '12px',
                     background: appHostLanguage === 'csharp' ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
-                    color: appHostLanguage === 'csharp' ? 'var(--sl-color-black)' : 'var(--sl-color-gray-3)',
+                    color: appHostLanguage === 'csharp' ? '#fff' : 'var(--sl-color-gray-3)',
                     border: 'none',
                     cursor: 'pointer',
                     fontWeight: 600,
@@ -376,7 +376,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     gap: '4px',
                   }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 32 32" fill={appHostLanguage === 'csharp' ? 'var(--sl-color-black)' : '#368832'}>
+                  <svg width="12" height="12" viewBox="0 0 32 32" fill={appHostLanguage === 'csharp' ? '#fff' : '#368832'}>
                     <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
                   </svg>
                   C#
@@ -389,7 +389,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     padding: '4px 10px',
                     fontSize: '12px',
                     background: appHostLanguage === 'typescript' ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
-                    color: appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : 'var(--sl-color-gray-3)',
+                    color: appHostLanguage === 'typescript' ? '#fff' : 'var(--sl-color-gray-3)',
                     border: 'none',
                     borderLeft: '1px solid var(--sl-color-gray-5)',
                     cursor: 'pointer',
@@ -400,8 +400,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     gap: '4px',
                   }}
                 >
-                  <svg width="12" height="12" viewBox="0 0 256 256" fill={appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : '#3178C6'}>
-                    <rect width="256" height="256" rx="20" fill={appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : '#3178C6'}/>
+                  <svg width="12" height="12" viewBox="0 0 256 256" fill={appHostLanguage === 'typescript' ? '#fff' : '#3178C6'}>
+                    <rect width="256" height="256" rx="20" fill={appHostLanguage === 'typescript' ? '#fff' : '#3178C6'}/>
                     <path d="M150.518 200.475V228.87C154.834 231.136 160.06 232.847 166.198 234.004C172.336 235.16 178.852 235.738 185.746 235.738C192.48 235.738 198.756 235.086 204.574 233.783C210.391 232.479 215.467 230.365 219.803 227.438C224.138 224.512 227.534 220.67 229.992 215.914C232.449 211.158 233.678 205.353 233.678 198.5C233.678 193.439 232.904 189.033 231.358 185.283C229.811 181.533 227.656 178.213 224.894 175.322C222.131 172.432 218.847 169.839 215.041 167.545C211.235 165.251 207.069 163.042 202.544 160.918C199.244 159.418 196.278 157.938 193.646 156.477C191.014 155.016 188.764 153.5 186.896 151.928C185.029 150.355 183.587 148.655 182.571 146.826C181.554 144.998 181.046 142.94 181.046 140.654C181.046 138.526 181.497 136.613 182.398 134.916C183.3 133.219 184.554 131.769 186.16 130.566C187.766 129.363 189.68 128.429 191.902 127.762C194.124 127.096 196.604 126.762 199.34 126.762C201.405 126.762 203.565 126.941 205.822 127.299C208.079 127.657 210.348 128.228 212.626 129.012C214.905 129.795 217.087 130.781 219.174 131.969C221.261 133.158 223.172 134.563 224.906 136.185V109.857C220.906 108.266 216.534 107.066 211.789 106.256C207.044 105.445 201.65 105.04 195.606 105.04C188.906 105.04 182.686 105.723 176.945 107.088C171.205 108.453 166.198 110.639 161.925 113.645C157.652 116.651 154.296 120.508 151.858 125.215C149.421 129.922 148.202 135.563 148.202 142.138C148.202 150.404 150.454 157.478 154.958 163.36C159.462 169.242 166.194 174.354 175.154 178.697C178.614 180.317 181.756 181.898 184.58 183.438C187.404 184.977 189.83 186.557 191.858 188.178C193.886 189.799 195.472 191.545 196.616 193.416C197.76 195.287 198.332 197.377 198.332 199.684C198.332 201.692 197.881 203.507 196.98 205.127C196.078 206.748 194.791 208.128 193.118 209.27C191.446 210.412 189.42 211.299 187.04 211.933C184.66 212.566 181.999 212.883 179.058 212.883C173.458 212.883 167.972 211.778 162.6 209.57C157.228 207.361 152.573 204.209 148.634 200.113L150.518 200.475ZM113.582 130.304H147.946V109.041H52.052V130.304H86.046V235.041H113.582V130.304Z" fill="white"/>
                   </svg>
                   TS
@@ -670,8 +670,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   overflow: 'auto',
                   whiteSpace: 'pre',
                 }}>
-                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'{\n'}</span>
-                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'  "appHost": { ... },\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{'{\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{'  "appHost": { ... },\n'}</span>
                   <span style={{ color: 'var(--sl-color-white)', fontWeight: 600 }}>{'  "packages"'}</span>
                   <span style={{ color: 'var(--sl-color-gray-3)' }}>{': {\n'}</span>
                   {Object.entries(packagesObj).map(([name, version], i, arr) => (
@@ -683,8 +683,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     </span>
                   ))}
                   <span style={{ color: 'var(--sl-color-gray-3)' }}>{'  },\n'}</span>
-                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'  "profiles": { ... }\n'}</span>
-                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'}'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{'  "profiles": { ... }\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{'}'}</span>
                 </pre>
               );
             })()}
@@ -720,7 +720,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                             color: 'var(--sl-color-white)',
                           }}
                         >
-                          <span style={{ color: 'var(--sl-color-gray-4)' }}>$ </span>
+                          <span style={{ color: 'var(--sl-color-gray-3)' }}>$ </span>
                           aspire add {shortName}
                         </code>
                       );
@@ -1204,7 +1204,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                       padding: '8px 16px',
                       fontSize: '13px',
                       background: isValidFileName(newFileName) ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
-                      color: isValidFileName(newFileName) ? 'var(--sl-color-black)' : 'var(--sl-color-gray-3)',
+                      color: isValidFileName(newFileName) ? '#fff' : 'var(--sl-color-gray-3)',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: isValidFileName(newFileName) ? 'pointer' : 'not-allowed',
@@ -1235,7 +1235,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     padding: '10px 16px',
                     fontSize: '13px',
                     background: 'var(--sl-color-accent)',
-                    color: 'var(--sl-color-black)',
+                    color: '#fff',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
@@ -1373,7 +1373,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                             padding: '6px 10px',
                             fontSize: '11px',
                             background: currentFile === file.name ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-5)',
-                            color: currentFile === file.name ? 'var(--sl-color-black)' : 'var(--sl-color-white)',
+                            color: currentFile === file.name ? '#fff' : 'var(--sl-color-white)',
                             border: 'none',
                             borderRadius: '4px',
                             cursor: 'pointer',

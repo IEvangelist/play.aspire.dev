@@ -299,7 +299,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
             padding: '8px 16px',
             fontSize: '14px',
             background: selectedCategory === 'all' ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
-            color: selectedCategory === 'all' ? 'var(--sl-color-black)' : 'var(--sl-color-gray-2)',
+            color: selectedCategory === 'all' ? '#fff' : 'var(--sl-color-gray-2)',
             border: 'none',
             borderRadius: '16px',
             cursor: 'pointer',
@@ -318,7 +318,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
               padding: '8px 16px',
               fontSize: '14px',
               background: selectedCategory === category.id ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
-              color: selectedCategory === category.id ? 'var(--sl-color-black)' : 'var(--sl-color-gray-2)',
+              color: selectedCategory === category.id ? '#fff' : 'var(--sl-color-gray-2)',
               border: 'none',
               borderRadius: '16px',
               cursor: 'pointer',
@@ -441,7 +441,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'var(--sl-color-accent)';
-                      e.currentTarget.style.color = 'var(--sl-color-black)';
+                      e.currentTarget.style.color = '#fff';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.background = 'transparent';
@@ -461,7 +461,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                       padding: '7px 14px',
                       fontSize: '13px',
                       background: 'var(--sl-color-accent)',
-                      color: 'var(--sl-color-black)',
+                      color: '#fff',
                       border: 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',

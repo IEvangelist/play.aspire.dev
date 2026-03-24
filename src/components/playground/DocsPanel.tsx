@@ -261,7 +261,7 @@ export default function DocsPanel({ resource, onClose }: DocsPanelProps) {
           padding: '10px 16px',
           fontSize: '14px',
           background: 'var(--sl-color-accent)',
-          color: 'var(--sl-color-black)',
+          color: '#fff',
           textDecoration: 'none',
           borderRadius: '6px',
           fontWeight: 600,
