@@ -4,6 +4,7 @@
  */
 
 import type { Node, Edge } from '@xyflow/react';
+import { aspireResources } from '../data/aspire-resources';
 
 const STORAGE_PREFIX = 'aspire-playground-apphost-';
 const FILE_LIST_KEY = 'aspire-playground-apphost-files';
@@ -77,7 +78,21 @@ export function loadAppHostFile(name: string): SavedAppHost | null {
   try {
     const fileJson = localStorage.getItem(`${STORAGE_PREFIX}${name}`);
     if (!fileJson) return null;
-    return JSON.parse(fileJson);
+    const file = JSON.parse(fileJson) as SavedAppHost;
+
+    // Re-resolve icons from current resource definitions (saved state may have stale hashed paths)
+    if (file.canvas?.nodes) {
+      file.canvas.nodes = file.canvas.nodes.map((node: Node) => {
+        const data = node.data as Record<string, unknown>;
+        const resourceDef = aspireResources.find(r => r.id === data?.resourceType);
+        if (resourceDef && resourceDef.icon) {
+          return { ...node, data: { ...data, icon: resourceDef.icon, color: resourceDef.color } };
+        }
+        return node;
+      });
+    }
+
+    return file;
   } catch {
     return null;
   }

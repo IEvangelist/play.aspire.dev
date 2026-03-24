@@ -8,6 +8,7 @@
 
 import type { Node, Edge } from '@xyflow/react';
 import type { AspireNodeData } from '../components/playground/AspireNode';
+import { aspireResources } from '../data/aspire-resources';
 import type { AppHostLanguage } from './codeGenerator';
 
 /**
@@ -108,6 +109,18 @@ export function decodePlaygroundState(encoded: string): PlaygroundState | null {
       animated: true,
       style: { stroke: '#888', strokeWidth: 2 },
     }));
+
+    // Re-resolve icons from current resource definitions (shared URLs may have stale hashed paths)
+    state.nodes = state.nodes.map(node => {
+      const resourceDef = aspireResources.find(r => r.id === node.data?.resourceType);
+      if (resourceDef && resourceDef.icon) {
+        return {
+          ...node,
+          data: { ...node.data, icon: resourceDef.icon, color: resourceDef.color },
+        };
+      }
+      return node;
+    });
 
     // Default language if missing
     if (!state.language) state.language = 'csharp';
