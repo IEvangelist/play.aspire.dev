@@ -22,6 +22,8 @@ export interface PlaygroundState {
   paletteCollapsed?: boolean;
   codePreviewWidth?: number;
   toolbarCollapsed?: boolean;
+  activeTab?: string;
+  codePreviewCollapsed?: boolean;
 }
 
 const STATE_VERSION = 1;
@@ -49,7 +51,13 @@ export function encodePlaygroundState(
   nodes: Node<AspireNodeData>[],
   edges: Edge[],
   language: AppHostLanguage,
-  ui?: { paletteCollapsed?: boolean; codePreviewWidth?: number; toolbarCollapsed?: boolean },
+  ui?: {
+    paletteCollapsed?: boolean;
+    codePreviewWidth?: number;
+    toolbarCollapsed?: boolean;
+    activeTab?: string;
+    codePreviewCollapsed?: boolean;
+  },
 ): string {
   // Strip transient React Flow fields to reduce size
   const minimalNodes = nodes.map(n => ({
@@ -75,6 +83,8 @@ export function encodePlaygroundState(
     ...(ui?.paletteCollapsed !== undefined && { paletteCollapsed: ui.paletteCollapsed }),
     ...(ui?.codePreviewWidth !== undefined && { codePreviewWidth: ui.codePreviewWidth }),
     ...(ui?.toolbarCollapsed !== undefined && { toolbarCollapsed: ui.toolbarCollapsed }),
+    ...(ui?.activeTab && { activeTab: ui.activeTab }),
+    ...(ui?.codePreviewCollapsed !== undefined && { codePreviewCollapsed: ui.codePreviewCollapsed }),
   };
 
   return toUrlSafeBase64(JSON.stringify(state));

@@ -29,17 +29,31 @@ interface CodePreviewProps {
   theme: 'dark' | 'light';
   appHostLanguage: AppHostLanguage;
   onLanguageChange: (language: AppHostLanguage) => void;
+  initialTab?: string;
+  onTabChange?: (tab: string) => void;
+  initialCollapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
 }
 
-type Tab = 'apphost' | 'packages' | 'deploy' | 'validation' | 'files';
+export type CodePreviewTab = 'apphost' | 'packages' | 'deploy' | 'validation' | 'files';
 
-export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme, appHostLanguage, onLanguageChange }: CodePreviewProps) {
+type Tab = CodePreviewTab;
+
+export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme, appHostLanguage, onLanguageChange, initialTab, onTabChange, initialCollapsed, onCollapsedChange }: CodePreviewProps) {
   const appHostFileName = appHostLanguage === 'typescript' ? 'apphost.ts' : 'AppHost.cs';
-  const [activeTab, setActiveTab] = useState<Tab>('apphost');
+  const [activeTab, setActiveTabState] = useState<Tab>((initialTab as Tab) || 'apphost');
+  const setActiveTab = (tab: Tab) => {
+    setActiveTabState(tab);
+    onTabChange?.(tab);
+  };
   const [isResizing, setIsResizing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedDeployIndex, setCopiedDeployIndex] = useState<number | null>(null);
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsedState] = useState(initialCollapsed ?? true);
+  const setIsCollapsed = (collapsed: boolean) => {
+    setIsCollapsedState(collapsed);
+    onCollapsedChange?.(collapsed);
+  };
   const [expandedWidth, setExpandedWidth] = useState(() => {
     // Initialize to a proper expanded width, not the collapsed width
     const COLLAPSED_WIDTH = 54; // 48px content + 6px resize handle

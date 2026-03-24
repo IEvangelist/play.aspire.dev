@@ -92,6 +92,8 @@ export default function AspirePlayground() {
   const [history, setHistory] = useState<{ nodes: Node<AspireNodeData>[]; edges: Edge[] }[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [copiedNodes, setCopiedNodes] = useState<Node<AspireNodeData>[]>([]);
+  const [codePreviewTab, setCodePreviewTab] = useState<string>('apphost');
+  const [codePreviewCollapsed, setCodePreviewCollapsed] = useState(true);
   const [showTemplateGallery, setShowTemplateGallery] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
@@ -202,6 +204,12 @@ export default function AspirePlayground() {
       }
       if (sharedState.toolbarCollapsed !== undefined) {
         setIsToolbarCollapsed(sharedState.toolbarCollapsed);
+      }
+      if (sharedState.activeTab) {
+        setCodePreviewTab(sharedState.activeTab);
+      }
+      if (sharedState.codePreviewCollapsed !== undefined) {
+        setCodePreviewCollapsed(sharedState.codePreviewCollapsed);
       }
       setHasLoadedFromUrl(true);
       return;
@@ -331,6 +339,8 @@ export default function AspirePlayground() {
       paletteCollapsed: isPaletteCollapsed,
       codePreviewWidth,
       toolbarCollapsed: isToolbarCollapsed,
+      activeTab: codePreviewTab,
+      codePreviewCollapsed,
     });
     const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
     
@@ -341,7 +351,7 @@ export default function AspirePlayground() {
       // Fallback: show the URL in a prompt
       prompt('Share this URL:', shareUrl);
     });
-  }, [nodes, edges, appHostLanguage, isPaletteCollapsed, codePreviewWidth, isToolbarCollapsed]);
+  }, [nodes, edges, appHostLanguage, isPaletteCollapsed, codePreviewWidth, isToolbarCollapsed, codePreviewTab, codePreviewCollapsed]);
 
   // Get SVG URL for embedding
   const handleGetSvgUrl = useCallback(() => {
@@ -1307,6 +1317,10 @@ export default function AspirePlayground() {
         theme={theme}
         appHostLanguage={appHostLanguage}
         onLanguageChange={setAppHostLanguage}
+        initialTab={codePreviewTab}
+        onTabChange={setCodePreviewTab}
+        initialCollapsed={codePreviewCollapsed}
+        onCollapsedChange={setCodePreviewCollapsed}
       />
 
       {/* Configuration Panel */}
