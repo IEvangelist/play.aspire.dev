@@ -1073,10 +1073,10 @@ export default function AspirePlayground() {
               bottom: '6px',
               right: '100px',
               zIndex: 4,
-              background: 'white',
+              background: 'var(--sl-color-gray-6)',
               padding: '4px 8px',
               borderRadius: '4px',
-              boxShadow: '0 2px 6px rgba(116, 85, 221, 0.25)',
+              border: '1px solid var(--sl-color-gray-5)',
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
@@ -1084,7 +1084,7 @@ export default function AspirePlayground() {
           >
             <span
               style={{
-                color: '#1F1E33',
+                color: 'var(--sl-color-accent-high)',
                 fontSize: '9px',
                 fontWeight: 600,
                 fontFamily: 'var(--sl-font-mono)',
