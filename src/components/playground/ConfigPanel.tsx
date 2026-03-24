@@ -298,7 +298,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                   </a>
                 )}
                 <a
-                  href={`https://learn.microsoft.com/en-us/dotnet/aspire/search/?query=${encodeURIComponent(resourceDef.displayName)}`}
+                  href={`https://aspire.dev/integrations/gallery/?query=${encodeURIComponent(resourceDef.displayName)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{
@@ -312,7 +312,7 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
                     fontWeight: 500,
                   }}
                 >
-                  📚 Microsoft Learn
+                  📚 Aspire Docs
                 </a>
               </div>
             </section>

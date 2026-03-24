@@ -58,7 +58,7 @@ The Aspire Playground is now a **fully functional visual development tool** for 
 ### Documentation
 
 - ✅ Integrated docs panel with 3 tabs
-- ✅ Microsoft Learn links
+- ✅ aspire.dev links
 - ✅ Example code for each resource
 - ✅ Package and hosting information
 
@@ -363,7 +363,7 @@ Requires api-ripper at `E:\GitHub\api-ripper`
 
 - Aspire Team - Amazing framework
 - React Flow - Excellent canvas library
-- Microsoft Learn - Comprehensive docs
+- aspire.dev - Comprehensive docs
 - Open Source Community - Inspiration
 
 ---

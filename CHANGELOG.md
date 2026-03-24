@@ -106,9 +106,9 @@ This release implements all features from the PRD, bringing the Aspire Playgroun
 - **DocsPanel** component with 3 tabs:
   - **Overview**: Package info, hosting method, supported languages
   - **Example**: Code snippets for each resource
-  - **Reference**: Links to Microsoft Learn documentation
+  - **Reference**: Links to aspire.dev documentation
 - **"View Docs"** button on each resource card
-- **Documentation URLs** mapped to official Microsoft Learn
+- **Documentation URLs** mapped to official aspire.dev
 - **Quick Links** section with common documentation
 - **ValidationPanel** with real-time architecture analysis:
   - **Errors** (must fix):
@@ -282,5 +282,5 @@ See LICENSE file for details.
 
 - **Aspire Team** - For the amazing distributed application framework
 - **React Flow** - For the excellent visual canvas library
-- **Microsoft Learn** - For comprehensive Aspire documentation
+- **aspire.dev** - For comprehensive Aspire documentation
 - **api-ripper** - For NuGet package metadata extraction
