@@ -26,7 +26,7 @@ import ConfirmDialog from './ConfirmDialog';
 import ImportModal, { type ImportType } from './ImportModal';
 import { generateAppHostCode, type AppHostLanguage } from '../../utils/codeGenerator';
 import { parseAppHost, parseDockerCompose, parseDockerfile } from '../../utils/importParsers';
-import { getAppHostFromUrl, encodeAppHost, createSvgUrl } from '../../utils/urlEncoding';
+import { getAppHostFromUrl, createSvgUrl, encodePlaygroundState, getStateFromUrl } from '../../utils/urlEncoding';
 import { aspireResources, type AspireResource } from '../../data/aspire-resources';
 import type { Template } from '../../data/templates';
 
@@ -186,7 +186,19 @@ export default function AspirePlayground() {
   useEffect(() => {
     if (hasLoadedFromUrl) return;
     
-    // First priority: load from URL if shared apphost exists
+    // First priority: load full state from URL (?state= param)
+    const sharedState = getStateFromUrl();
+    if (sharedState) {
+      setNodes(sharedState.nodes);
+      setEdges(sharedState.edges);
+      if (sharedState.language) {
+        setAppHostLanguage(sharedState.language);
+      }
+      setHasLoadedFromUrl(true);
+      return;
+    }
+
+    // Second priority: load from legacy ?apphost= param (code text)
     const sharedAppHost = getAppHostFromUrl();
     if (sharedAppHost) {
       try {
@@ -206,7 +218,7 @@ export default function AspirePlayground() {
       return;
     }
     
-    // Second priority: reload current file if it exists
+    // Third priority: reload current file if it exists
     if (currentFile) {
       const savedFile = loadAppHostFile(currentFile);
       if (savedFile?.canvas) {
@@ -216,7 +228,7 @@ export default function AspirePlayground() {
     }
     
     setHasLoadedFromUrl(true);
-  }, [hasLoadedFromUrl, currentFile, setNodes, setEdges]);
+  }, [hasLoadedFromUrl, currentFile, setNodes, setEdges, setAppHostLanguage]);
 
   // Track shift key state for snap-to-connected-nodes feature
   useEffect(() => {
@@ -304,10 +316,10 @@ export default function AspirePlayground() {
     return generateAppHostCode(nodes, edges, appHostLanguage);
   }, [nodes, edges, appHostLanguage]);
 
-  // Share functionality
+  // Share functionality — encodes full canvas state (nodes, edges, positions, language)
   const handleShare = useCallback(() => {
-    const encoded = encodeAppHost(generatedCode.appHost);
-    const shareUrl = `${window.location.origin}${window.location.pathname}?apphost=${encoded}`;
+    const encoded = encodePlaygroundState(nodes, edges, appHostLanguage);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?state=${encoded}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
       setSaveMessage('Share link copied!');
@@ -316,7 +328,7 @@ export default function AspirePlayground() {
       // Fallback: show the URL in a prompt
       prompt('Share this URL:', shareUrl);
     });
-  }, [generatedCode.appHost]);
+  }, [nodes, edges, appHostLanguage]);
 
   // Get SVG URL for embedding
   const handleGetSvgUrl = useCallback(() => {
