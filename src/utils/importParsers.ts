@@ -92,8 +92,8 @@ export function parseAppHost(content: string): ImportResult {
     compute: 600,
   };
   
-  // Pattern 1: var name = builder.AddXxx("resourceName")
-  const pattern1 = /(?:var|let|const)\s+(\w+)\s*=\s*builder\.Add(\w+)(?:<[^>]+>)?\s*\(\s*"([^"]+)"/g;
+  // Pattern 1: var/const name = builder.AddXxx("resourceName") or builder.addXxx("resourceName")
+  const pattern1 = /(?:var|let|const)\s+(\w+)\s*=\s*(?:await\s+)?builder\.[aA]dd(\w+)(?:<[^>]+>)?\s*\(\s*"([^"]+)"/g;
   let match;
   
   while ((match = pattern1.exec(content)) !== null) {
@@ -129,8 +129,8 @@ export function parseAppHost(content: string): ImportResult {
     }
   }
 
-  // Pattern 2: var db = parentVar.AddDatabase("dbname")
-  const pattern2 = /(?:var|let|const)\s+(\w+)\s*=\s*(\w+)\.AddDatabase\s*\(\s*"([^"]+)"/g;
+  // Pattern 2: var/const db = parentVar.AddDatabase("dbname") or parentVar.addDatabase("dbname")
+  const pattern2 = /(?:var|let|const)\s+(\w+)\s*=\s*(\w+)\.[aA]ddDatabase\s*\(\s*"([^"]+)"/g;
   
   while ((match = pattern2.exec(content)) !== null) {
     const [, varName, parentVar, dbName] = match;
@@ -147,14 +147,67 @@ export function parseAppHost(content: string): ImportResult {
     }
   }
 
-  // Pattern 3: Find .WithReference(resourceVar) calls
-  // TODO: Implement parsing of chained .WithReference() calls
-  // This would handle cases like:
-  //   var api = builder.AddProject<Projects.Api>("api")
-  //       .WithReference(database);
+  // Pattern 3: Find .WithReference(resourceVar) / .withReference(resourceVar) calls
+  // Handles both C# and TypeScript patterns:
+  //   var api = builder.AddProject<Projects.Api>("api").WithReference(database);
+  //   const api = await builder.addNodeApp("api", ...).withReference(tododb);
+  const pattern3 = /(?:var|let|const)\s+(\w+)\s*=[\s\S]*?\.[wW]ithReference\s*\(\s*(\w+)\s*\)/g;
+  
+  while ((match = pattern3.exec(content)) !== null) {
+    const [, targetVar, sourceVar] = match;
+    const targetNodeId = resourceMap.get(targetVar);
+    const sourceNodeId = resourceMap.get(sourceVar);
+    
+    if (targetNodeId && sourceNodeId && targetNodeId !== sourceNodeId) {
+      const edgeId = `edge_${edges.length}`;
+      // Avoid duplicate edges
+      if (!edges.some(e => e.source === sourceNodeId && e.target === targetNodeId)) {
+        edges.push({
+          id: edgeId,
+          source: sourceNodeId,
+          target: targetNodeId,
+          animated: true,
+          style: { stroke: '#888', strokeWidth: 2 },
+        });
+      }
+    }
+  }
+
+  // Pattern 3b: Also find multi-line .withReference calls on separate lines
+  // e.g.  const api = await builder.addNodeApp("api", ...)
+  //           .withReference(tododb)
+  //           .withReference(cache);
+  for (const [varName, nodeId] of resourceMap.entries()) {
+    // Find the full declaration block for this variable
+    const blockPattern = new RegExp(
+      `(?:var|let|const)\\s+${varName}\\s*=[\\s\\S]*?;`,
+      'g'
+    );
+    const blockMatch = blockPattern.exec(content);
+    if (blockMatch) {
+      const block = blockMatch[0];
+      const refPattern = /\.[wW]ithReference\s*\(\s*(\w+)\s*\)/g;
+      let refMatch;
+      while ((refMatch = refPattern.exec(block)) !== null) {
+        const sourceVar = refMatch[1];
+        const sourceNodeId = resourceMap.get(sourceVar);
+        if (sourceNodeId && sourceNodeId !== nodeId) {
+          if (!edges.some(e => e.source === sourceNodeId && e.target === nodeId)) {
+            edges.push({
+              id: `edge_${edges.length}`,
+              source: sourceNodeId,
+              target: nodeId,
+              animated: true,
+              style: { stroke: '#888', strokeWidth: 2 },
+            });
+          }
+        }
+      }
+    }
+  }
 
   if (nodes.length === 0) {
-    warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* patterns.');
+    warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* or builder.add* patterns.');
   }
 
   return { nodes, edges, warnings };
