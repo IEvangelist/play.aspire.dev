@@ -7,29 +7,35 @@
  *
  * To regenerate: npm run generate-resources
  */
-import devtunnelsIcon from '../assets/icons/devtunnels-icon.png';
+import devtunnelsIcon from '../assets/icons/devtunnels-icon.svg';
+import dockerIcon from '../assets/icons/docker.svg';
+import dotnetprojectIcon from '../assets/icons/csharp.svg';
+import elasticsearchIcon from '../assets/icons/elasticsearch-icon.png';
 import garnetIcon from '../assets/icons/garnet-icon.png';
 import githubmodelsIcon from '../assets/icons/github-models-icon.png';
-import javascriptIcon from '../assets/icons/javascript-icon.png';
-import kafkaIcon from '../assets/icons/kafka-icon.png';
+import javascriptIcon from '../assets/icons/javascript-icon.svg';
+import kafkaIcon from '../assets/icons/kafka-icon.svg';
+import keycloakIcon from '../assets/icons/keycloak-icon.svg';
+import kubernetesIcon from '../assets/icons/kubernetes-icon.svg';
+import mauiIcon from '../assets/icons/maui-icon.png';
 import milvusIcon from '../assets/icons/milvus-icon.png';
 import mongodbIcon from '../assets/icons/mongodb-icon.png';
 import mysqlIcon from '../assets/icons/mysql-icon.png';
 import natsIcon from '../assets/icons/nats-icon.png';
+import nodejsIcon from '../assets/icons/nodejs-icon.png';
+import ollamaIcon from '../assets/icons/ollama-icon.png';
 import openaiIcon from '../assets/icons/openai-icon.png';
-import oracleIcon from '../assets/icons/oracle-icon.png';
+import oracleIcon from '../assets/icons/oracle-icon.svg';
 import orleansIcon from '../assets/icons/orleans-icon.png';
 import postgresqlIcon from '../assets/icons/postgresql-icon.png';
-import pythonIcon from '../assets/icons/python-icon.png';
-import qdrantIcon from '../assets/icons/qdrant-icon.png';
-import rabbitmqIcon from '../assets/icons/rabbitmq-icon.png';
+import pythonIcon from '../assets/icons/python-icon.svg';
+import qdrantIcon from '../assets/icons/qdrant-icon.svg';
+import rabbitmqIcon from '../assets/icons/rabbitmq-icon.svg';
 import redisIcon from '../assets/icons/redis-icon.png';
 import seqIcon from '../assets/icons/seq-icon.png';
 import sqlserverIcon from '../assets/icons/sqlserver-icon.png';
 import valkeyIcon from '../assets/icons/valkey-icon.png';
-import yarpIcon from '../assets/icons/yarp-icon.png';
-import dotnetprojectIcon from '../assets/icons/csharp.svg';
-import containerIcon from '../assets/icons/docker.svg';
+import yarpIcon from '../assets/icons/yarp-icon.svg';
 
 export interface AspireResource {
   id: string;
@@ -80,7 +86,7 @@ export const aspireResources: AspireResource[] = [
     name: 'maui',
     displayName: 'Maui',
     category: 'project',
-    icon: '',
+    icon: mauiIcon,
     color: '#0078D4',
     description: 'Maui resource',
     package: 'Aspire.Hosting.Maui',
@@ -94,7 +100,7 @@ export const aspireResources: AspireResource[] = [
     name: 'nodeapp',
     displayName: 'NodeApp',
     category: 'project',
-    icon: javascriptIcon,
+    icon: nodejsIcon,
     color: '#0078D4',
     description: 'Adds a node application to the application model.',
     package: 'Aspire.Hosting.JavaScript',
@@ -400,7 +406,7 @@ export const aspireResources: AspireResource[] = [
     name: 'ollama',
     displayName: 'Ollama',
     category: 'ai',
-    icon: '',
+    icon: ollamaIcon,
     color: '#00BCF2',
     description: 'Ollama resource',
     package: 'Aspire.Hosting.Ollama',
@@ -428,7 +434,7 @@ export const aspireResources: AspireResource[] = [
     name: 'container',
     displayName: 'Container',
     category: 'compute',
-    icon: containerIcon,
+    icon: dockerIcon,
     color: '#2496ED',
     description: 'Custom Docker container image',
     package: 'Aspire.Hosting',
@@ -455,7 +461,7 @@ export const aspireResources: AspireResource[] = [
     name: 'docker',
     displayName: 'Docker',
     category: 'compute',
-    icon: '',
+    icon: dockerIcon,
     color: '#8764B8',
     description: 'Docker resource',
     package: 'Aspire.Hosting.Docker',
@@ -469,7 +475,7 @@ export const aspireResources: AspireResource[] = [
     name: 'elasticsearch',
     displayName: 'Elasticsearch',
     category: 'compute',
-    icon: '',
+    icon: elasticsearchIcon,
     color: '#8764B8',
     description: 'Elasticsearch support for .',
     package: 'Aspire.Hosting.Elasticsearch',
@@ -483,7 +489,7 @@ export const aspireResources: AspireResource[] = [
     name: 'keycloak',
     displayName: 'Keycloak',
     category: 'compute',
-    icon: '',
+    icon: keycloakIcon,
     color: '#8764B8',
     description: 'Keycloak resource',
     package: 'Aspire.Hosting.Keycloak',
@@ -497,7 +503,7 @@ export const aspireResources: AspireResource[] = [
     name: 'kubernetes',
     displayName: 'Kubernetes',
     category: 'compute',
-    icon: '',
+    icon: kubernetesIcon,
     color: '#8764B8',
     description: 'Kubernetes resource',
     package: 'Aspire.Hosting.Kubernetes',
