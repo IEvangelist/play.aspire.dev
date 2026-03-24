@@ -1070,25 +1070,23 @@ export default function AspirePlayground() {
           <div
             style={{
               position: 'absolute',
-              top: '6px',
-              right: '6px',
+              bottom: '6px',
+              right: '100px',
               zIndex: 4,
-              background: 'var(--sl-color-gray-7)',
-              padding: '8px 14px',
-              borderRadius: '6px',
-              border: '1px solid var(--sl-color-gray-5)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+              background: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              boxShadow: '0 2px 6px rgba(116, 85, 221, 0.25)',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '4px',
             }}
           >
-            <span style={{ fontSize: '14px' }}>📄</span>
             <span
               style={{
-                color: 'var(--sl-color-white)',
-                fontSize: '13px',
-                fontWeight: 500,
+                color: '#1F1E33',
+                fontSize: '9px',
+                fontWeight: 600,
                 fontFamily: 'var(--sl-font-mono)',
               }}
             >
