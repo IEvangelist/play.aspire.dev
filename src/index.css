@@ -199,7 +199,7 @@
 }
 
 .react-flow__attribution a {
-  color: var(--sl-color-accent-high) !important;
+  color: hsl(333 100% 50%) !important;
   text-decoration: none !important;
   display: flex !important;
   align-items: center !important;
