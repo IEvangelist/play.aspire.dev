@@ -23,6 +23,9 @@ export default function TemplateGallery({ onApplyTemplate, onClose }: TemplateGa
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Template Gallery"
       style={{
         position: 'fixed',
         top: 0,
@@ -38,11 +41,13 @@ export default function TemplateGallery({ onApplyTemplate, onClose }: TemplateGa
       onClick={onClose}
     >
       <div
+        className="modal-content"
         style={{
           background: 'var(--sl-color-bg)',
           border: '1px solid var(--sl-color-gray-5)',
           borderRadius: '12px',
           width: '900px',
+          maxWidth: 'calc(100vw - 32px)',
           maxHeight: '80vh',
           overflow: 'hidden',
           display: 'flex',
@@ -71,6 +76,7 @@ export default function TemplateGallery({ onApplyTemplate, onClose }: TemplateGa
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close template gallery"
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -91,6 +97,7 @@ export default function TemplateGallery({ onApplyTemplate, onClose }: TemplateGa
             placeholder="Search templates..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search templates"
             style={{
               width: '100%',
               padding: '10px 14px',

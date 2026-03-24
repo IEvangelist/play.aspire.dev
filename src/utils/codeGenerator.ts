@@ -7,6 +7,8 @@ export interface DeploymentCommand {
   docsUrl: string;
 }
 
+export type AppHostLanguage = 'csharp' | 'typescript';
+
 export interface GeneratedCode {
   appHost: string;
   nugetPackages: string[];
@@ -14,6 +16,8 @@ export interface GeneratedCode {
   appSettings?: string;
   dockerfile?: string;
   azureManifest?: string;
+  aspireConfig?: string;
+  language: AppHostLanguage;
 }
 
 const SDK_VERSION = '13.1.1';
@@ -82,7 +86,14 @@ function generateResourceCode(
   return code;
 }
 
-export function generateAppHostCode(nodes: Node<AspireNodeData>[], edges: Edge[]): GeneratedCode {
+export function generateAppHostCode(nodes: Node<AspireNodeData>[], edges: Edge[], language: AppHostLanguage = 'csharp'): GeneratedCode {
+  if (language === 'typescript') {
+    return generateTypeScriptAppHost(nodes, edges);
+  }
+  return generateCSharpAppHost(nodes, edges);
+}
+
+function generateCSharpAppHost(nodes: Node<AspireNodeData>[], edges: Edge[]): GeneratedCode {
   const nugetPackages = new Set<string>();
   const resourceDeclarations: string[] = [];
 
@@ -188,6 +199,7 @@ builder.Build().Run();`;
     appSettings: generateAppSettings(nodes),
     dockerfile: generateDockerfile(nodes),
     azureManifest: generateAzureManifest(nodes, edges),
+    language: 'csharp',
   };
 }
 
@@ -296,6 +308,232 @@ function generateAzureManifest(nodes: Node<AspireNodeData>[], _edges: Edge[]): s
   });
 
   return JSON.stringify({ containerApps }, null, 2);
+}
+
+// ──────────────────────────────────────────────
+// TypeScript AppHost code generation
+// ──────────────────────────────────────────────
+
+// Convert a C# PascalCase hosting method like "AddPostgres" to camelCase "addPostgres"
+function toCamelCase(method: string): string {
+  return method.charAt(0).toLowerCase() + method.slice(1);
+}
+
+// TypeScript path-based resource builders (camelCase, await-based)
+const TS_PATH_BASED_RESOURCES: Record<string, (name: string) => string> = {
+  'dotnet-project': (name) => `await builder.addProject("${name}", "../${sanitizeTsIdentifier(name)}/${capitalize(sanitizeTsIdentifier(name))}.csproj", "https")`,
+  'container': (name) => `await builder.addContainer("${name}", "myregistry/${name}", "latest")\n    .withHttpEndpoint({ targetPort: 8080 })`,
+  'nodeapp': (name) => `await builder.addNodeApp("${name}", "../${name}", "server.js")\n    .withNpm()`,
+  'javascriptapp': (name) => `await builder.addJavaScriptApp("${name}", "../${name}")`,
+  'viteapp': (name) => `await builder.addViteApp("${name}", "../${name}")\n    .withHttpEndpoint({ env: "PORT" })`,
+  'pythonapp': (name) => `await builder.addPythonApp("${name}", "../${name}", "main.py")`,
+  'pythonexecutable': (name) => `await builder.addPythonExecutable("${name}", "../${name}", "main.py")`,
+  'pythonmodule': (name) => `await builder.addPythonModule("${name}", "../${name}")`,
+  'uvicornapp': (name) => `await builder.addUvicornApp("${name}", "../${name}", "main:app")\n    .withUv()`,
+};
+
+function generateTsResourceCode(
+  node: Node<AspireNodeData>,
+  npmPackages: Set<string>,
+): string {
+  const { resourceType, instanceName, databaseName, persistent } = node.data;
+  if (!instanceName) return '';
+
+  const tsVarName = sanitizeTsIdentifier(instanceName);
+  const tsDatabaseName = databaseName ? sanitizeTsIdentifier(databaseName) : null;
+  const resourceDef = findResourceDef(resourceType);
+
+  let code = '';
+
+  if (TS_PATH_BASED_RESOURCES[resourceType]) {
+    code = `const ${tsVarName} = ${TS_PATH_BASED_RESOURCES[resourceType](instanceName)}`;
+  } else if (resourceDef) {
+    const tsMethod = toCamelCase(resourceDef.hostingMethod);
+    code = `const ${tsVarName} = await builder.${tsMethod}("${instanceName}")`;
+  } else {
+    const method = toCamelCase('Add' + capitalize(resourceType));
+    code = `const ${tsVarName} = await builder.${method}("${instanceName}")`;
+  }
+
+  // Add persistent lifetime for database resources
+  if (resourceDef && resourceDef.category === 'database' && persistent !== false) {
+    code += `\n    .withLifetime("persistent")`;
+  }
+
+  // Add child database resource
+  if (resourceDef?.allowsDatabase && tsDatabaseName) {
+    const tsConnMethod = toCamelCase(resourceDef.connectionMethod || 'AddDatabase');
+    code += `;\nconst ${tsDatabaseName} = ${tsVarName}.${tsConnMethod}("${databaseName}")`;
+  }
+
+  // Track npm package (same as NuGet name for reference)
+  if (resourceDef?.nugetPackage) {
+    npmPackages.add(resourceDef.nugetPackage);
+  }
+
+  return code;
+}
+
+function generateTypeScriptAppHost(nodes: Node<AspireNodeData>[], edges: Edge[]): GeneratedCode {
+  const npmPackages = new Set<string>();
+  const resourceDeclarations: string[] = [];
+
+  const sortedNodes = topologicalSort(nodes, edges);
+
+  sortedNodes.forEach(node => {
+    const { instanceName, envVars, ports, volumes, replicas } = node.data;
+    if (!instanceName) return;
+
+    let code = generateTsResourceCode(node, npmPackages);
+    if (!code) return;
+
+    // Environment variables
+    if (envVars && envVars.length > 0) {
+      envVars.forEach(env => {
+        if (env.key && env.value) {
+          code += `\n    .withEnvironment("${env.key}", "${env.value}")`;
+        }
+      });
+    }
+
+    // Port mappings
+    if (ports && ports.length > 0) {
+      ports.forEach(port => {
+        if (port.container) {
+          const opts: string[] = [];
+          if (port.host) opts.push(`port: ${port.host}`);
+          opts.push(`targetPort: ${port.container}`);
+          code += `\n    .withHttpEndpoint({ ${opts.join(', ')} })`;
+        }
+      });
+    }
+
+    // Volume mounts
+    if (volumes && volumes.length > 0) {
+      volumes.forEach(volume => {
+        if (volume.source && volume.target) {
+          code += `\n    .withBindMount("${volume.source}", "${volume.target}")`;
+        }
+      });
+    }
+
+    // Replicas
+    if (replicas && replicas > 1) {
+      code += `\n    .withReplicas(${replicas})`;
+    }
+
+    // References from incoming edges
+    const deps = edges.filter(e => e.target === node.id);
+    if (deps.length > 0) {
+      const sourceNodes = deps.map(dep => nodes.find(n => n.id === dep.source)).filter(Boolean);
+      sourceNodes.forEach(sourceNode => {
+        const sourceName = sourceNode!.data.databaseName || sourceNode!.data.instanceName;
+        if (sourceName) {
+          code += `\n    .withReference(${sanitizeTsIdentifier(sourceName)})`;
+        }
+      });
+
+      // WaitFor for infrastructure dependencies
+      const infraDeps = sourceNodes.filter(n => {
+        const def = findResourceDef(n!.data.resourceType);
+        return def && INFRASTRUCTURE_CATEGORIES.includes(def.category);
+      });
+      infraDeps.forEach(infraNode => {
+        const infraName = infraNode!.data.databaseName || infraNode!.data.instanceName;
+        if (infraName) {
+          code += `\n    .waitFor(${sanitizeTsIdentifier(infraName)})`;
+        }
+      });
+    }
+
+    resourceDeclarations.push(code + ';');
+  });
+
+  // Build the packages comment (aspire add commands instead of NuGet)
+  const packageComments = Array.from(npmPackages)
+    .sort()
+    .map(pkg => `// aspire add ${pkg.replace(/Aspire\.Hosting\./i, '').replace(/@.*$/, '').toLowerCase()}`)
+    .join('\n');
+
+  const header = packageComments
+    ? `// Aspire TypeScript AppHost\n// For more information, see: https://aspire.dev\n${packageComments}\n`
+    : `// Aspire TypeScript AppHost\n// For more information, see: https://aspire.dev\n`;
+
+  const appHost = `${header}
+import { createBuilder } from './.modules/aspire.js';
+
+const builder = await createBuilder();
+
+${resourceDeclarations.join('\n\n')}
+
+await builder.build().run();`;
+
+  const deploymentOptions: DeploymentCommand[] = [
+    { command: 'aspire run', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-run/' },
+    { command: 'aspire publish', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-publish/' },
+    { command: 'aspire deploy', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-deploy/' },
+    { command: 'aspire deploy --environment staging', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-deploy/' },
+    { command: 'aspire do build', docsUrl: 'https://aspire.dev/reference/cli/commands/aspire-do/' },
+  ];
+
+  return {
+    appHost,
+    nugetPackages: Array.from(npmPackages),
+    deploymentOptions,
+    appSettings: generateAppSettings(nodes),
+    dockerfile: generateDockerfile(nodes),
+    azureManifest: generateAzureManifest(nodes, edges),
+    aspireConfig: generateAspireConfig(npmPackages),
+    language: 'typescript',
+  };
+}
+
+function generateAspireConfig(packages: Set<string>): string {
+  const pkgEntries: Record<string, string> = {
+    'Aspire.Hosting.JavaScript': SDK_VERSION,
+  };
+  packages.forEach(pkg => {
+    const [name, version] = pkg.split('@');
+    if (name && name !== 'Aspire.Hosting.JavaScript') {
+      pkgEntries[name] = version || SDK_VERSION;
+    }
+  });
+
+  const config = {
+    appHost: {
+      path: 'apphost.ts',
+      language: 'typescript/nodejs',
+    },
+    packages: pkgEntries,
+    profiles: {
+      https: {
+        applicationUrl: 'https://localhost:17127;http://localhost:15118',
+        environmentVariables: {
+          ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL: 'https://localhost:21169',
+          ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL: 'https://localhost:22260',
+        },
+      },
+    },
+  };
+
+  return JSON.stringify(config, null, 2);
+}
+
+function sanitizeTsIdentifier(name: string): string {
+  let sanitized = name.replace(/[^a-zA-Z0-9]/g, ' ');
+  sanitized = sanitized
+    .split(' ')
+    .filter(word => word.length > 0)
+    .map((word, index) => {
+      if (index === 0) {
+        return word.charAt(0).toLowerCase() + word.slice(1).toLowerCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join('');
+  if (/^[0-9]/.test(sanitized)) sanitized = 'n' + sanitized;
+  if (!sanitized) sanitized = 'resource';
+  return sanitized;
 }
 
 function topologicalSort(nodes: Node<AspireNodeData>[], edges: Edge[]): Node<AspireNodeData>[] {

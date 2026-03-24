@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createHighlighter } from 'shiki';
 import type { Node, Edge } from '@xyflow/react';
-import type { GeneratedCode } from '../../utils/codeGenerator';
+import type { GeneratedCode, AppHostLanguage } from '../../utils/codeGenerator';
 import type { AspireNodeData } from './AspireNode';
 import { validatePlayground, type ValidationIssue } from '../../utils/validation';
 import ConfirmDialog from './ConfirmDialog';
@@ -27,11 +27,14 @@ interface CodePreviewProps {
   currentFile: string | null;
   onSetCurrentFile: (name: string | null) => void;
   theme: 'dark' | 'light';
+  appHostLanguage: AppHostLanguage;
+  onLanguageChange: (language: AppHostLanguage) => void;
 }
 
 type Tab = 'apphost' | 'packages' | 'deploy' | 'validation' | 'files';
 
-export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme }: CodePreviewProps) {
+export default function CodePreview({ generatedCode, width, onResize, nodes, edges, onNodeClick, onLoadCanvas, currentFile, onSetCurrentFile, theme, appHostLanguage, onLanguageChange }: CodePreviewProps) {
+  const appHostFileName = appHostLanguage === 'typescript' ? 'apphost.ts' : 'AppHost.cs';
   const [activeTab, setActiveTab] = useState<Tab>('apphost');
   const [isResizing, setIsResizing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -107,13 +110,13 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     const highlightCode = async () => {
       const highlighter = await createHighlighter({
         themes: ['laserwave', 'github-light'],
-        langs: ['csharp', 'powershell'],
+        langs: ['csharp', 'typescript', 'powershell'],
       });
 
       if (cancelled) return;
 
       const highlighted = highlighter.codeToHtml(generatedCode.appHost, {
-        lang: 'csharp',
+        lang: appHostLanguage === 'typescript' ? 'typescript' : 'csharp',
         theme: theme === 'dark' ? 'laserwave' : 'github-light',
       });
 
@@ -127,7 +130,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
     return () => {
       cancelled = true;
     };
-  }, [generatedCode, theme]);
+  }, [generatedCode, theme, appHostLanguage]);
 
   useEffect(() => {
     if (!isResizing) return;
@@ -318,15 +321,76 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               gap: '8px',
               zIndex: 10,
             }}>
+              {/* Language toggle */}
+              <div
+                role="radiogroup"
+                aria-label="AppHost language"
+                style={{
+                  display: 'flex',
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                  border: '1px solid var(--sl-color-gray-5)',
+                }}
+              >
+                <button
+                  role="radio"
+                  aria-checked={appHostLanguage === 'csharp'}
+                  onClick={() => onLanguageChange('csharp')}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    background: appHostLanguage === 'csharp' ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
+                    color: appHostLanguage === 'csharp' ? 'var(--sl-color-black)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 32 32" fill={appHostLanguage === 'csharp' ? 'var(--sl-color-black)' : '#368832'}>
+                    <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
+                  </svg>
+                  C#
+                </button>
+                <button
+                  role="radio"
+                  aria-checked={appHostLanguage === 'typescript'}
+                  onClick={() => onLanguageChange('typescript')}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '12px',
+                    background: appHostLanguage === 'typescript' ? 'var(--sl-color-accent)' : 'var(--sl-color-gray-6)',
+                    color: appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : 'var(--sl-color-gray-3)',
+                    border: 'none',
+                    borderLeft: '1px solid var(--sl-color-gray-5)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 256 256" fill={appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : '#3178C6'}>
+                    <rect width="256" height="256" rx="20" fill={appHostLanguage === 'typescript' ? 'var(--sl-color-black)' : '#3178C6'}/>
+                    <path d="M150.518 200.475V228.87C154.834 231.136 160.06 232.847 166.198 234.004C172.336 235.16 178.852 235.738 185.746 235.738C192.48 235.738 198.756 235.086 204.574 233.783C210.391 232.479 215.467 230.365 219.803 227.438C224.138 224.512 227.534 220.67 229.992 215.914C232.449 211.158 233.678 205.353 233.678 198.5C233.678 193.439 232.904 189.033 231.358 185.283C229.811 181.533 227.656 178.213 224.894 175.322C222.131 172.432 218.847 169.839 215.041 167.545C211.235 165.251 207.069 163.042 202.544 160.918C199.244 159.418 196.278 157.938 193.646 156.477C191.014 155.016 188.764 153.5 186.896 151.928C185.029 150.355 183.587 148.655 182.571 146.826C181.554 144.998 181.046 142.94 181.046 140.654C181.046 138.526 181.497 136.613 182.398 134.916C183.3 133.219 184.554 131.769 186.16 130.566C187.766 129.363 189.68 128.429 191.902 127.762C194.124 127.096 196.604 126.762 199.34 126.762C201.405 126.762 203.565 126.941 205.822 127.299C208.079 127.657 210.348 128.228 212.626 129.012C214.905 129.795 217.087 130.781 219.174 131.969C221.261 133.158 223.172 134.563 224.906 136.185V109.857C220.906 108.266 216.534 107.066 211.789 106.256C207.044 105.445 201.65 105.04 195.606 105.04C188.906 105.04 182.686 105.723 176.945 107.088C171.205 108.453 166.198 110.639 161.925 113.645C157.652 116.651 154.296 120.508 151.858 125.215C149.421 129.922 148.202 135.563 148.202 142.138C148.202 150.404 150.454 157.478 154.958 163.36C159.462 169.242 166.194 174.354 175.154 178.697C178.614 180.317 181.756 181.898 184.58 183.438C187.404 184.977 189.83 186.557 191.858 188.178C193.886 189.799 195.472 191.545 196.616 193.416C197.76 195.287 198.332 197.377 198.332 199.684C198.332 201.692 197.881 203.507 196.98 205.127C196.078 206.748 194.791 208.128 193.118 209.27C191.446 210.412 189.42 211.299 187.04 211.933C184.66 212.566 181.999 212.883 179.058 212.883C173.458 212.883 167.972 211.778 162.6 209.57C157.228 207.361 152.573 204.209 148.634 200.113L150.518 200.475ZM113.582 130.304H147.946V109.041H52.052V130.304H86.046V235.041H113.582V130.304Z" fill="white"/>
+                  </svg>
+                  TS
+                </button>
+              </div>
               {/* Download button */}
               <button
                 onClick={() => {
-                  const fileName = currentFile || 'AppHost';
+                  const fileName = currentFile || (appHostLanguage === 'typescript' ? 'apphost' : 'AppHost');
+                  const ext = appHostLanguage === 'typescript' ? '.ts' : '.cs';
                   const blob = new Blob([generatedCode.appHost], { type: 'text/plain;charset=utf-8' });
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement('a');
                   a.href = url;
-                  a.download = `${fileName}.cs`;
+                  a.download = `${fileName}${ext}`;
                   document.body.appendChild(a);
                   a.click();
                   document.body.removeChild(a);
@@ -353,6 +417,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
                 title="Download code as .cs file"
+                aria-label="Download code as .cs file"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -389,6 +454,8 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
                 title="Copy code"
+                aria-label={copied ? 'Code copied to clipboard' : 'Copy code to clipboard'}
+                aria-live="polite"
               >
                 {copied ? (
                   <>
@@ -459,7 +526,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                     borderRadius: '4px',
                     fontFamily: 'var(--sl-font-mono)',
                     fontSize: '12px',
-                  }}>AppHost.cs</code> file. Project paths (e.g., <code style={{ 
+                  }}>{appHostFileName}</code> file. Project paths (e.g., <code style={{ 
                     background: 'var(--sl-color-gray-5)', 
                     padding: '2px 6px', 
                     borderRadius: '4px',
@@ -473,7 +540,170 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
         );
 
       case 'packages':
-        return (
+        return appHostLanguage === 'typescript' ? (
+          <div style={{ padding: '20px', position: 'relative' }}>
+            {/* Copy button */}
+            {generatedCode.aspireConfig && (
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(generatedCode.aspireConfig!);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: '16px',
+                  right: '16px',
+                  padding: '6px 10px',
+                  fontSize: '12px',
+                  background: copied ? 'var(--sl-color-green-high)' : 'var(--sl-color-gray-5)',
+                  color: 'var(--sl-color-white)',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                  transition: 'all 0.2s',
+                  zIndex: 10,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                onMouseEnter={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-4)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!copied) e.currentTarget.style.background = 'var(--sl-color-gray-5)';
+                }}
+                title="Copy aspire.config.json"
+                aria-label={copied ? 'Copied to clipboard' : 'Copy aspire.config.json'}
+              >
+                {copied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    Copy
+                  </>
+                )}
+              </button>
+            )}
+            <h3 style={{
+              margin: '0 0 4px 0',
+              fontSize: '15px',
+              fontWeight: 600,
+              color: 'var(--sl-color-white)',
+              letterSpacing: '-0.01em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <span style={{ fontFamily: 'var(--sl-font-mono)', fontSize: '14px' }}>aspire.config.json</span>
+            </h3>
+            <p style={{
+              margin: '0 0 16px 0',
+              fontSize: '13px',
+              color: 'var(--sl-color-gray-3)',
+              lineHeight: '1.5',
+            }}>
+              Packages are managed via <code style={{
+                background: 'var(--sl-color-gray-5)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontFamily: 'var(--sl-font-mono)',
+                fontSize: '12px',
+              }}>aspire add</code> and listed in the <code style={{
+                background: 'var(--sl-color-gray-5)',
+                padding: '2px 6px',
+                borderRadius: '4px',
+                fontFamily: 'var(--sl-font-mono)',
+                fontSize: '12px',
+              }}>packages</code> section.
+            </p>
+            {generatedCode.aspireConfig && (() => {
+              const config = JSON.parse(generatedCode.aspireConfig);
+              const packagesObj = config.packages || {};
+              return (
+                <pre style={{
+                  margin: 0,
+                  padding: '16px',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  fontFamily: 'var(--sl-font-mono)',
+                  color: 'var(--sl-color-gray-3)',
+                  background: 'var(--sl-color-gray-6)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--sl-color-gray-5)',
+                  overflow: 'auto',
+                  whiteSpace: 'pre',
+                }}>
+                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'{\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'  "appHost": { ... },\n'}</span>
+                  <span style={{ color: 'var(--sl-color-white)', fontWeight: 600 }}>{'  "packages"'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{': {\n'}</span>
+                  {Object.entries(packagesObj).map(([name, version], i, arr) => (
+                    <span key={name}>
+                      <span style={{ color: 'var(--sl-color-accent-high)' }}>{`    "${name}"`}</span>
+                      <span style={{ color: 'var(--sl-color-gray-3)' }}>{': '}</span>
+                      <span style={{ color: 'var(--sl-color-green-high)' }}>{`"${version}"`}</span>
+                      <span style={{ color: 'var(--sl-color-gray-3)' }}>{i < arr.length - 1 ? ',\n' : '\n'}</span>
+                    </span>
+                  ))}
+                  <span style={{ color: 'var(--sl-color-gray-3)' }}>{'  },\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'  "profiles": { ... }\n'}</span>
+                  <span style={{ color: 'var(--sl-color-gray-4)' }}>{'}'}</span>
+                </pre>
+              );
+            })()}
+            {/* aspire add commands */}
+            {generatedCode.nugetPackages.length > 0 && (
+              <div style={{ marginTop: '16px' }}>
+                <h4 style={{
+                  margin: '0 0 10px 0',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: 'var(--sl-color-gray-2)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  Install commands
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {generatedCode.nugetPackages
+                    .filter(pkg => !pkg.startsWith('Aspire.Hosting.JavaScript'))
+                    .map((pkg, index) => {
+                      const shortName = pkg.replace(/Aspire\.Hosting\./i, '').replace(/@.*$/, '').toLowerCase();
+                      return (
+                        <code
+                          key={index}
+                          style={{
+                            display: 'block',
+                            padding: '8px 12px',
+                            fontSize: '13px',
+                            fontFamily: 'var(--sl-font-mono)',
+                            background: 'var(--sl-color-gray-6)',
+                            border: '1px solid var(--sl-color-gray-5)',
+                            borderRadius: '6px',
+                            color: 'var(--sl-color-white)',
+                          }}
+                        >
+                          <span style={{ color: 'var(--sl-color-gray-4)' }}>$ </span>
+                          aspire add {shortName}
+                        </code>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
           <div style={{ padding: '20px', position: 'relative' }}>
             {/* Copy button */}
             {generatedCode.nugetPackages.length > 0 && (
@@ -1324,6 +1554,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                 }
               }}
               title="Select tab"
+              aria-label="Select tab"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="6" x2="21" y2="6" />
@@ -1374,7 +1605,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
                     <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
                   </svg>
-                  AppHost.cs
+                  {appHostFileName}
                 </button>
                 <button
                   onClick={() => { setActiveTab('packages'); setIsCollapsedMenuOpen(false); }}
@@ -1586,6 +1817,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                 e.currentTarget.style.background = 'transparent';
               }}
               title="Collapse panel"
+              aria-label="Collapse code panel"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
@@ -1619,7 +1851,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                         <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
                           <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
                         </svg>
-                        AppHost.cs
+                        {appHostFileName}
                       </>
                     )}
                     {activeTab === 'packages' && '📦 Packages'}
@@ -1720,7 +1952,7 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                       <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
                         <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
                       </svg>
-                      AppHost.cs
+                      {appHostFileName}
                     </button>
                     <button
                       onClick={() => { setActiveTab('packages'); setIsMenuOpen(false); }}
@@ -1851,8 +2083,11 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               </div>
             ) : (
               /* Wide Mode: All Tabs Visible */
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              <div role="tablist" aria-label="Code preview tabs" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 <button
+                  role="tab"
+                  aria-selected={activeTab === 'apphost'}
+                  aria-controls="tabpanel-apphost"
                   onClick={() => setActiveTab('apphost')}
                   style={{
                     padding: '6px 10px',
@@ -1872,9 +2107,12 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   <svg width="12" height="12" viewBox="0 0 32 32" fill="#368832">
                     <path d="M19.792 7.071h2.553v2.553H24.9V7.071h2.552v2.553H30v2.552h-2.55v2.551H30v2.553h-2.551v2.552H24.9v-2.55h-2.55v2.552h-2.557v-2.55H17.24v-2.559h2.553v-2.546H17.24V9.622h2.554Zm2.553 7.658H24.9v-2.553h-2.555Zm-7.656 9.284a10.2 10.2 0 0 1-4.653.915a7.6 7.6 0 0 1-5.89-2.336A8.84 8.84 0 0 1 2 16.367a9.44 9.44 0 0 1 2.412-6.719a8.18 8.18 0 0 1 6.259-2.577a11.1 11.1 0 0 1 4.018.638v3.745a6.8 6.8 0 0 0-3.723-1.036a4.8 4.8 0 0 0-3.7 1.529a5.88 5.88 0 0 0-1.407 4.142a5.77 5.77 0 0 0 1.328 3.992a4.55 4.55 0 0 0 3.575 1.487a7.3 7.3 0 0 0 3.927-1.108Z"/>
                   </svg>
-                  AppHost.cs
+                  {appHostFileName}
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={activeTab === 'packages'}
+                  aria-controls="tabpanel-packages"
                   onClick={() => setActiveTab('packages')}
                   style={{
                     padding: '6px 10px',
@@ -1894,6 +2132,9 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   📦 Packages
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={activeTab === 'deploy'}
+                  aria-controls="tabpanel-deploy"
                   onClick={() => setActiveTab('deploy')}
                   style={{
                     padding: '6px 10px',
@@ -1913,6 +2154,9 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   🚀 Deploy
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={activeTab === 'validation'}
+                  aria-controls="tabpanel-validation"
                   onClick={() => setActiveTab('validation')}
                   style={{
                     padding: '6px 10px',
@@ -1944,6 +2188,9 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
                   )}
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={activeTab === 'files'}
+                  aria-controls="tabpanel-files"
                   onClick={() => setActiveTab('files')}
                   style={{
                     padding: '6px 10px',
@@ -1988,6 +2235,9 @@ export default function CodePreview({ generatedCode, width, onResize, nodes, edg
               userSelect: 'none',
               WebkitUserSelect: 'none',
             }}
+            role="tabpanel"
+            id={`tabpanel-${activeTab}`}
+            aria-label={`${activeTab} content`}
           >
             {renderContent()}
           </div>

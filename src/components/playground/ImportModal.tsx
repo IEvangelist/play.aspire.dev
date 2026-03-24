@@ -134,6 +134,9 @@ export default function ImportModal({ isOpen, onClose, onImport }: ImportModalPr
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Import"
       style={{
         position: 'fixed',
         top: 0,
@@ -150,6 +153,7 @@ export default function ImportModal({ isOpen, onClose, onImport }: ImportModalPr
       onClick={onClose}
     >
       <div
+        className="modal-content"
         style={{
           background: 'var(--sl-color-gray-6)',
           borderRadius: '12px',

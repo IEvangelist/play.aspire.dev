@@ -62,6 +62,9 @@ export default function ConfirmDialog({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
       style={{
         position: 'fixed',
         top: 0,
@@ -78,6 +81,7 @@ export default function ConfirmDialog({
       onClick={onCancel}
     >
       <div
+        className="modal-content"
         style={{
           background: 'var(--sl-color-gray-6)',
           borderRadius: '12px',
@@ -91,7 +95,7 @@ export default function ConfirmDialog({
       >
         {/* Header */}
         <div style={{ marginBottom: '16px' }}>
-          <h3 style={{
+          <h3 id="confirm-dialog-title" style={{
             margin: 0,
             fontSize: '18px',
             fontWeight: 600,
@@ -100,7 +104,7 @@ export default function ConfirmDialog({
             alignItems: 'center',
             gap: '10px',
           }}>
-            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <span aria-hidden="true" style={{ fontSize: '20px' }}>⚠️</span>
             {title}
           </h3>
         </div>

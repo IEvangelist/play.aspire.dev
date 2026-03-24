@@ -69,6 +69,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
             e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
           }}
           title="Expand Resource Palette"
+          aria-label="Expand Resource Palette"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="9 18 15 12 9 6" />
@@ -120,6 +121,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
               e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
             }}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
             {theme === 'dark' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -145,6 +147,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
             href="https://github.com/IEvangelist/play.aspire.dev"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="View source on GitHub"
             style={{
               width: '36px',
               height: '36px',
@@ -181,7 +184,8 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
   }
 
   return (
-    <div
+    <nav
+      aria-label="Resource palette"
       style={{
         width: '320px',
         height: '100%',
@@ -242,6 +246,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
               e.currentTarget.style.background = 'transparent';
             }}
             title="Collapse Resource Palette"
+            aria-label="Collapse Resource Palette"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-gray-3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
@@ -255,10 +260,11 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
           placeholder="Search resources..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search resources by name, description, or package"
           style={{
             width: '100%',
             padding: '10px 14px',
-            fontSize: '15px',
+            fontSize: '16px',
             background: 'var(--sl-color-gray-6)',
             border: '1px solid var(--sl-color-gray-5)',
             borderRadius: '6px',
@@ -276,6 +282,8 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
 
       {/* Category Filters */}
       <div
+        role="group"
+        aria-label="Filter resources by category"
         style={{
           padding: '16px 20px',
           borderBottom: '1px solid var(--sl-color-gray-5)',
@@ -286,6 +294,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
       >
         <button
           onClick={() => setSelectedCategory('all')}
+          aria-pressed={selectedCategory === 'all'}
           style={{
             padding: '8px 16px',
             fontSize: '14px',
@@ -304,6 +313,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
+            aria-pressed={selectedCategory === category.id}
             style={{
               padding: '8px 16px',
               fontSize: '14px',
@@ -392,7 +402,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                     </div>
                   </div>
                   {resource.icon ? (
-                    <img src={resource.icon} alt="" style={{ height: '36px', maxWidth: '64px', width: 'auto', objectFit: 'contain' }} />
+                    <img src={resource.icon} alt={`${resource.displayName} icon`} style={{ height: '36px', maxWidth: '64px', width: 'auto', objectFit: 'contain' }} />
                   ) : (
                     <span style={{ fontSize: '28px' }}>📦</span>
                   )}
@@ -438,7 +448,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                       e.currentTarget.style.color = 'var(--sl-color-accent)';
                     }}
                   >
-                    📖 Docs
+                    <span aria-hidden="true">📖</span> Docs
                   </a>
                   <button
                     onClick={(e) => {
@@ -446,6 +456,7 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
                       onAddResource?.(resource);
                     }}
                     onDragStart={(e) => e.preventDefault()}
+                    aria-label={`Add ${resource.displayName} to canvas`}
                     style={{
                       padding: '7px 14px',
                       fontSize: '13px',
@@ -571,6 +582,6 @@ export default function ResourcePalette({ onResourceDragStart, onAddResource, is
           v{__APP_VERSION__}
         </span>
       </div>
-    </div>
+    </nav>
   );
 }

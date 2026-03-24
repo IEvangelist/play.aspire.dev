@@ -146,6 +146,9 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Configure ${selectedNode.data.label}`}
       style={{
         position: 'fixed',
         top: 0,
@@ -161,11 +164,13 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
       onClick={onClose}
     >
       <div
+        className="modal-content"
         style={{
           background: 'var(--sl-color-bg)',
           border: '1px solid var(--sl-color-gray-5)',
           borderRadius: '12px',
           width: '680px',
+          maxWidth: 'calc(100vw - 32px)',
           maxHeight: '85vh',
           overflow: 'auto',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
@@ -184,12 +189,13 @@ export default function ConfigPanel({ selectedNode, onUpdateNode, onClose }: Con
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {selectedNode.data.icon ? (
-              <img src={selectedNode.data.icon} alt="" style={{ height: '32px', maxWidth: '56px', width: 'auto', objectFit: 'contain' }} />
+              <img src={selectedNode.data.icon} alt={`${selectedNode.data.label} icon`} style={{ height: '32px', maxWidth: '56px', width: 'auto', objectFit: 'contain' }} />
             ) : (
               <span style={{ fontSize: '28px' }}>📦</span>
             )}
             <div>
               <h2
+                id="config-panel-title"
                 style={{
                   margin: 0,
                   fontSize: '18px',

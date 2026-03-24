@@ -54,6 +54,8 @@ export default function ValidationPanel({ nodes, edges, onNodeClick }: Validatio
   if (issues.length === 0) {
     return (
       <div
+        role="status"
+        aria-live="polite"
         style={{
           position: 'absolute',
           top: '80px',
@@ -80,12 +82,16 @@ export default function ValidationPanel({ nodes, edges, onNodeClick }: Validatio
 
   return (
     <div
+      role="region"
+      aria-label="Validation results"
+      aria-live="polite"
       style={{
         position: 'absolute',
         top: '80px',
         left: '50%',
         transform: 'translateX(-50%)',
         width: '600px',
+        maxWidth: 'calc(100vw - 32px)',
         maxHeight: '400px',
         background: 'var(--sl-color-bg)',
         border: '1px solid var(--sl-color-gray-5)',
@@ -147,6 +153,9 @@ export default function ValidationPanel({ nodes, edges, onNodeClick }: Validatio
         {issues.map(issue => (
           <div
             key={issue.id}
+            role={issue.nodeId ? 'button' : undefined}
+            tabIndex={issue.nodeId ? 0 : undefined}
+            aria-label={issue.nodeId ? `${issue.message} - click to focus node` : undefined}
             style={{
               padding: '12px',
               marginBottom: '8px',
@@ -157,6 +166,12 @@ export default function ValidationPanel({ nodes, edges, onNodeClick }: Validatio
               cursor: issue.nodeId ? 'pointer' : 'default',
             }}
             onClick={() => issue.nodeId && onNodeClick?.(issue.nodeId)}
+            onKeyDown={(e) => {
+              if (issue.nodeId && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                onNodeClick?.(issue.nodeId);
+              }
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
               <span style={{ fontSize: '16px', marginTop: '2px' }}>

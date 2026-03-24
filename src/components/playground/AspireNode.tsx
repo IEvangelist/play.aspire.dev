@@ -132,7 +132,7 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
         {data.icon ? (
-          <img src={data.icon} alt="" style={{ height: '24px', maxWidth: '40px', width: 'auto', objectFit: 'contain' }} />
+          <img src={data.icon} alt={`${data.label} icon`} style={{ height: '24px', maxWidth: '40px', width: 'auto', objectFit: 'contain' }} />
         ) : (
           <span style={{ fontSize: '20px', lineHeight: '24px' }}>📦</span>
         )}
@@ -173,8 +173,10 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
             }}
           />
         ) : (
-          <div
+          <button
             onClick={startEditing}
+            type="button"
+            aria-label={instanceName ? `Edit instance name: ${instanceName}` : 'Set instance name'}
             style={{
               cursor: 'text',
               padding: '4px 8px',
@@ -184,6 +186,9 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
               fontFamily: 'var(--sl-font-mono)',
               borderRadius: '4px',
               border: '1px solid transparent',
+              background: 'transparent',
+              textAlign: 'left',
+              width: '100%',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'var(--sl-node-input-bg)';
@@ -195,7 +200,7 @@ const AspireNode = memo(({ data, id, selected }: NodeProps<AspireNode>) => {
             }}
           >
             {instanceName || 'Click to name'}
-          </div>
+          </button>
         )}
       </div>
 

@@ -24,7 +24,7 @@ import ConfigPanel from './ConfigPanel';
 import TemplateGallery from './TemplateGallery';
 import ConfirmDialog from './ConfirmDialog';
 import ImportModal, { type ImportType } from './ImportModal';
-import { generateAppHostCode } from '../../utils/codeGenerator';
+import { generateAppHostCode, type AppHostLanguage } from '../../utils/codeGenerator';
 import { parseAppHost, parseDockerCompose, parseDockerfile } from '../../utils/importParsers';
 import { getAppHostFromUrl, encodeAppHost, createSvgUrl } from '../../utils/urlEncoding';
 import { aspireResources, type AspireResource } from '../../data/aspire-resources';
@@ -72,6 +72,8 @@ export default function AspirePlayground() {
   
   const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
+      // Auto-collapse on mobile screens
+      if (window.innerWidth <= 768) return true;
       const saved = localStorage.getItem('aspire-playground-palette-collapsed');
       return saved === 'true';
     }
@@ -120,6 +122,19 @@ export default function AspirePlayground() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   }, []);
 
+  const [appHostLanguage, setAppHostLanguage] = useState<AppHostLanguage>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('aspire-playground-language');
+      return (saved === 'typescript' ? 'typescript' : 'csharp');
+    }
+    return 'csharp';
+  });
+
+  // Persist language preference
+  useEffect(() => {
+    localStorage.setItem('aspire-playground-language', appHostLanguage);
+  }, [appHostLanguage]);
+
   // Apply theme to document and persist
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -155,6 +170,7 @@ export default function AspirePlayground() {
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setCodePreviewWidth(window.innerWidth); // Mobile: full width
+        setIsPaletteCollapsed(true); // Auto-collapse palette on mobile
       } else if (window.innerWidth <= 1200) {
         setCodePreviewWidth(Math.min(550, window.innerWidth * 0.45)); // Mid-sized: wider, up to 45%
       }
@@ -285,8 +301,8 @@ export default function AspirePlayground() {
 
   // Generate code whenever nodes or edges change
   const generatedCode = useMemo(() => {
-    return generateAppHostCode(nodes, edges);
-  }, [nodes, edges]);
+    return generateAppHostCode(nodes, edges, appHostLanguage);
+  }, [nodes, edges, appHostLanguage]);
 
   // Share functionality
   const handleShare = useCallback(() => {
@@ -563,12 +579,14 @@ export default function AspirePlayground() {
       saveAppHostFile(currentFile, generatedCode.appHost, { nodes, edges });
     }
     
-    // Download the AppHost.cs code
+    // Download the AppHost code
+    const ext = appHostLanguage === 'typescript' ? '.ts' : '.cs';
+    const defaultName = appHostLanguage === 'typescript' ? 'apphost' : 'AppHost';
     const blob = new Blob([generatedCode.appHost], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = currentFile ? `${currentFile}.AppHost.cs` : 'AppHost.cs';
+    a.download = currentFile ? `${currentFile}${ext}` : `${defaultName}${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -633,7 +651,10 @@ export default function AspirePlayground() {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', background: 'var(--sl-color-bg)' }}>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', background: 'var(--sl-color-bg)' }} role="application" aria-label="Aspire Playground">
+      {/* Skip to content link for keyboard users */}
+      <a href="#canvas" className="skip-to-content">Skip to canvas</a>
+
       {/* Left Panel: Resource Palette */}
       <ResourcePalette 
         onResourceDragStart={onResourceDragStart}
@@ -645,9 +666,11 @@ export default function AspirePlayground() {
       />
 
       {/* Center: React Flow Canvas */}
-      <div style={{ flex: 1, position: 'relative' }} ref={reactFlowWrapper}>
+      <div id="canvas" role="main" aria-label="Design canvas" style={{ flex: 1, position: 'relative' }} ref={reactFlowWrapper}>
         {/* Top Toolbar */}
         <div
+          role="toolbar"
+          aria-label="Canvas actions"
           style={{
             position: 'absolute',
             top: '6px',
@@ -689,6 +712,8 @@ export default function AspirePlayground() {
               e.currentTarget.style.borderColor = 'var(--sl-color-gray-5)';
             }}
             title={isToolbarCollapsed ? 'Expand toolbar' : 'Collapse toolbar'}
+            aria-label={isToolbarCollapsed ? 'Expand toolbar' : 'Collapse toolbar'}
+            aria-expanded={!isToolbarCollapsed}
           >
             <svg 
               width="18" 
@@ -751,8 +776,9 @@ export default function AspirePlayground() {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
                 title="Templates"
+                aria-label="Open template gallery"
               >
-                <span>📋</span>
+                <span aria-hidden="true">📋</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Templates</span>
               </button>
               <button
@@ -778,9 +804,10 @@ export default function AspirePlayground() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
-                title="Clear"
+                title="Clear canvas"
+                aria-label="Clear canvas"
               >
-                <span>🗑️</span>
+                <span aria-hidden="true">🗑️</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Clear</span>
               </button>
               <button
@@ -806,9 +833,10 @@ export default function AspirePlayground() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
-                title="Export"
+                title="Export code"
+                aria-label="Export code"
               >
-                <span>⬆️</span>
+                <span aria-hidden="true">⬆️</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Export</span>
               </button>
               <button
@@ -834,9 +862,10 @@ export default function AspirePlayground() {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                 }}
-                title="Import"
+                title="Import code"
+                aria-label="Import code"
               >
-                <span>⬇️</span>
+                <span aria-hidden="true">⬇️</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Import</span>
               </button>
               {currentFile && (
@@ -867,8 +896,9 @@ export default function AspirePlayground() {
                     }
                   }}
                   title={saveMessage ? 'Saved' : `Save changes to "${currentFile}"`}
+                  aria-label={saveMessage ? 'Changes saved' : `Save changes to ${currentFile}`}
                 >
-                  <span>{saveMessage ? '✓' : '💾'}</span>
+                  <span aria-hidden="true">{saveMessage ? '✓' : '💾'}</span>
                   <span style={{ marginLeft: '6px' }} className="toolbar-text">{saveMessage ? 'Saved' : 'Save'}</span>
                 </button>
               )}
@@ -899,8 +929,10 @@ export default function AspirePlayground() {
                   }
                 }}
                 title="Toggle keyboard shortcuts"
+                aria-label="Toggle keyboard shortcuts"
+                aria-pressed={showKeyboardLegend}
               >
-                <span>⌨️</span>
+                <span aria-hidden="true">⌨️</span>
                 <span style={{ marginLeft: '6px' }} className="toolbar-text">Shortcuts</span>
               </button>
               {currentFile && (
@@ -932,8 +964,9 @@ export default function AspirePlayground() {
                       e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                     }}
                     title="Copy shareable URL to clipboard"
+                    aria-label="Copy shareable URL to clipboard"
                   >
-                    <span>🔗</span>
+                    <span aria-hidden="true">🔗</span>
                     <span style={{ marginLeft: '6px' }} className="toolbar-text">Share</span>
                   </button>
                   <button
@@ -963,8 +996,9 @@ export default function AspirePlayground() {
                       e.currentTarget.style.background = 'var(--sl-color-gray-5)';
                     }}
                     title="Copy SVG embed URL to clipboard"
+                    aria-label="Copy SVG embed URL to clipboard"
                   >
-                    <span>🖼️</span>
+                    <span aria-hidden="true">🖼️</span>
                     <span style={{ marginLeft: '6px' }} className="toolbar-text">SVG</span>
                   </button>
                 </>
@@ -1001,7 +1035,7 @@ export default function AspirePlayground() {
                 fontFamily: 'var(--sl-font-mono)',
               }}
             >
-              ./{currentFile}.cs
+              ./{currentFile}{appHostLanguage === 'typescript' ? '.ts' : '.cs'}
             </span>
           </div>
         )}
@@ -1246,6 +1280,8 @@ export default function AspirePlayground() {
         currentFile={currentFile}
         onSetCurrentFile={handleSetCurrentFile}
         theme={theme}
+        appHostLanguage={appHostLanguage}
+        onLanguageChange={setAppHostLanguage}
       />
 
       {/* Configuration Panel */}
