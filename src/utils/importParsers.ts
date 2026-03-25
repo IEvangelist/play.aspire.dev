@@ -16,6 +16,17 @@ const getNodeId = () => `imported_${nodeIdCounter++}`;
  */
 function findAspireResource(identifier: string): typeof aspireResources[0] | undefined {
   const lowerIdentifier = identifier.toLowerCase();
+  const resourceAliases: Record<string, string> = {
+    csharpapp: 'dotnet-project',
+    executable: 'container',
+    project: 'dotnet-project',
+  };
+
+  const aliasedResourceId = resourceAliases[lowerIdentifier];
+  if (aliasedResourceId) {
+    const aliasedResource = aspireResources.find(r => r.id === aliasedResourceId);
+    if (aliasedResource) return aliasedResource;
+  }
   
   // Direct match by id or name
   let resource = aspireResources.find(r => 
@@ -66,6 +77,171 @@ function findAspireResource(identifier: string): typeof aspireResources[0] | und
   return aspireResources.find(r => r.id === 'container');
 }
 
+interface BuilderStatement {
+  text: string;
+  variableName?: string;
+  methodSuffix: string;
+  resourceName: string;
+}
+
+function splitTopLevelStatements(content: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let braceDepth = 0;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inTemplateString = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let isEscaped = false;
+
+  for (let index = 0; index < content.length; index += 1) {
+    const character = content[index];
+    const nextCharacter = content[index + 1];
+    current += character;
+
+    if (inLineComment) {
+      if (character === '\n') {
+        inLineComment = false;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (character === '*' && nextCharacter === '/') {
+        current += nextCharacter;
+        index += 1;
+        inBlockComment = false;
+      }
+      continue;
+    }
+
+    if (!inSingleQuote && !inDoubleQuote && !inTemplateString) {
+      if (character === '/' && nextCharacter === '/') {
+        current += nextCharacter;
+        index += 1;
+        inLineComment = true;
+        continue;
+      }
+
+      if (character === '/' && nextCharacter === '*') {
+        current += nextCharacter;
+        index += 1;
+        inBlockComment = true;
+        continue;
+      }
+    }
+
+    if (inSingleQuote || inDoubleQuote || inTemplateString) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+
+      if (character === '\\') {
+        isEscaped = true;
+        continue;
+      }
+
+      if (inSingleQuote && character === '\'') {
+        inSingleQuote = false;
+      } else if (inDoubleQuote && character === '"') {
+        inDoubleQuote = false;
+      } else if (inTemplateString && character === '`') {
+        inTemplateString = false;
+      }
+      continue;
+    }
+
+    if (character === '\'') {
+      inSingleQuote = true;
+      continue;
+    }
+
+    if (character === '"') {
+      inDoubleQuote = true;
+      continue;
+    }
+
+    if (character === '`') {
+      inTemplateString = true;
+      continue;
+    }
+
+    if (character === '{') {
+      braceDepth += 1;
+      continue;
+    }
+
+    if (character === '}') {
+      braceDepth = Math.max(0, braceDepth - 1);
+      continue;
+    }
+
+    if (character === '(') {
+      parenDepth += 1;
+      continue;
+    }
+
+    if (character === ')') {
+      parenDepth = Math.max(0, parenDepth - 1);
+      continue;
+    }
+
+    if (character === '[') {
+      bracketDepth += 1;
+      continue;
+    }
+
+    if (character === ']') {
+      bracketDepth = Math.max(0, bracketDepth - 1);
+      continue;
+    }
+
+    if (character === ';' && braceDepth === 0 && parenDepth === 0 && bracketDepth === 0) {
+      const statement = current.trim();
+      if (statement) {
+        statements.push(statement);
+      }
+      current = '';
+    }
+  }
+
+  const trailingStatement = current.trim();
+  if (trailingStatement) {
+    statements.push(trailingStatement);
+  }
+
+  return statements;
+}
+
+function extractBuilderStatements(content: string): BuilderStatement[] {
+  const statements = splitTopLevelStatements(content);
+  const builderStatements: BuilderStatement[] = [];
+
+  for (const statement of statements) {
+    const declarationMatch = statement.match(
+      /^(?:(?:var|let|const)\s+(\w+)\s*=\s*)?(?:await\s+)?builder\b[\s\S]*?\.\s*[aA]dd(\w+)(?:<[^>]+>)?\s*\(\s*["']([^"']+)["']/
+    );
+
+    if (!declarationMatch) {
+      continue;
+    }
+
+    const [, variableName, methodSuffix, resourceName] = declarationMatch;
+    builderStatements.push({
+      text: statement,
+      variableName,
+      methodSuffix,
+      resourceName,
+    });
+  }
+
+  return builderStatements;
+}
+
 /**
  * Parse C# AppHost.cs file and extract resources
  */
@@ -74,14 +250,9 @@ export function parseAppHost(content: string): ImportResult {
   const edges: Edge[] = [];
   const warnings: string[] = [];
   const resourceMap = new Map<string, string>(); // variable name -> node id
+  const warnedResourceTypes = new Set<string>();
 
-  // Match builder.Add* patterns
-  // Examples:
-  // var postgres = builder.AddPostgres("postgres");
-  // var db = postgres.AddDatabase("mydb");
-  // builder.AddProject<Projects.Api>("api").WithReference(db);
-  
-  // First pass: extract all resources
+  // First pass: extract all resources from top-level builder statements.
   let yPosition = 100;
   const xPositions = {
     project: 600,
@@ -91,18 +262,20 @@ export function parseAppHost(content: string): ImportResult {
     ai: 100,
     compute: 600,
   };
-  
-  // Pattern 1: var/const name = builder.AddXxx("resourceName") or builder.addXxx("resourceName")
-  const pattern1 = /(?:var|let|const)\s+(\w+)\s*=\s*(?:await\s+)?builder\.[aA]dd(\w+)(?:<[^>]+>)?\s*\(\s*"([^"]+)"/g;
-  let match;
-  
-  while ((match = pattern1.exec(content)) !== null) {
-    const [, varName, methodSuffix, resourceName] = match;
+
+  const builderStatements = extractBuilderStatements(content);
+
+  builderStatements.forEach((statement, index) => {
+    const { methodSuffix, resourceName, variableName } = statement;
     const resource = findAspireResource(methodSuffix);
-    
+
     if (resource) {
       const nodeId = getNodeId();
-      resourceMap.set(varName, nodeId);
+      const statementKey = variableName || `__imported_statement_${index}`;
+      resourceMap.set(statementKey, nodeId);
+      if (variableName) {
+        resourceMap.set(variableName, nodeId);
+      }
       
       const category = resource.category;
       const xPos = xPositions[category] || 300;
@@ -125,13 +298,18 @@ export function parseAppHost(content: string): ImportResult {
       
       yPosition += 120;
     } else {
-      warnings.push(`Unknown resource type: Add${methodSuffix}`);
+      const warningKey = `Add${methodSuffix}`;
+      if (!warnedResourceTypes.has(warningKey)) {
+        warnings.push(`Unknown resource type: ${warningKey}`);
+        warnedResourceTypes.add(warningKey);
+      }
     }
-  }
+  });
 
   // Pattern 2: var/const db = parentVar.AddDatabase("dbname") or parentVar.addDatabase("dbname")
-  const pattern2 = /(?:var|let|const)\s+(\w+)\s*=\s*(\w+)\.[aA]ddDatabase\s*\(\s*"([^"]+)"/g;
-  
+  const pattern2 = /(?:var|let|const)\s+(\w+)\s*=\s*(\w+)\s*\.\s*[aA]ddDatabase\s*\(\s*["']([^"']+)["']/g;
+  let match;
+
   while ((match = pattern2.exec(content)) !== null) {
     const [, varName, parentVar, dbName] = match;
     const parentNodeId = resourceMap.get(parentVar);
@@ -147,23 +325,25 @@ export function parseAppHost(content: string): ImportResult {
     }
   }
 
-  // Pattern 3: Find .WithReference(resourceVar) / .withReference(resourceVar) calls
-  // Handles both C# and TypeScript patterns:
-  //   var api = builder.AddProject<Projects.Api>("api").WithReference(database);
-  //   const api = await builder.addNodeApp("api", ...).withReference(tododb);
-  const pattern3 = /(?:var|let|const)\s+(\w+)\s*=[\s\S]*?\.[wW]ithReference\s*\(\s*(\w+)\s*\)/g;
-  
-  while ((match = pattern3.exec(content)) !== null) {
-    const [, targetVar, sourceVar] = match;
-    const targetNodeId = resourceMap.get(targetVar);
-    const sourceNodeId = resourceMap.get(sourceVar);
-    
-    if (targetNodeId && sourceNodeId && targetNodeId !== sourceNodeId) {
-      const edgeId = `edge_${edges.length}`;
-      // Avoid duplicate edges
-      if (!edges.some(e => e.source === sourceNodeId && e.target === targetNodeId)) {
+  // Pattern 3: Find .WithReference(resourceVar) / .withReference(resourceVar) calls inside each declaration block.
+  builderStatements.forEach((statement, index) => {
+    const statementKey = statement.variableName || `__imported_statement_${index}`;
+    const targetNodeId = resourceMap.get(statementKey);
+
+    if (!targetNodeId) {
+      return;
+    }
+
+    const refPattern = /\.[wW]ithReference\s*\(\s*(\w+)/g;
+    let refMatch;
+
+    while ((refMatch = refPattern.exec(statement.text)) !== null) {
+      const sourceVar = refMatch[1];
+      const sourceNodeId = resourceMap.get(sourceVar);
+
+      if (sourceNodeId && sourceNodeId !== targetNodeId && !edges.some(e => e.source === sourceNodeId && e.target === targetNodeId)) {
         edges.push({
-          id: edgeId,
+          id: `edge_${edges.length}`,
           source: sourceNodeId,
           target: targetNodeId,
           animated: true,
@@ -171,43 +351,10 @@ export function parseAppHost(content: string): ImportResult {
         });
       }
     }
-  }
-
-  // Pattern 3b: Also find multi-line .withReference calls on separate lines
-  // e.g.  const api = await builder.addNodeApp("api", ...)
-  //           .withReference(tododb)
-  //           .withReference(cache);
-  for (const [varName, nodeId] of resourceMap.entries()) {
-    // Find the full declaration block for this variable
-    const blockPattern = new RegExp(
-      `(?:var|let|const)\\s+${varName}\\s*=[\\s\\S]*?;`,
-      'g'
-    );
-    const blockMatch = blockPattern.exec(content);
-    if (blockMatch) {
-      const block = blockMatch[0];
-      const refPattern = /\.[wW]ithReference\s*\(\s*(\w+)\s*\)/g;
-      let refMatch;
-      while ((refMatch = refPattern.exec(block)) !== null) {
-        const sourceVar = refMatch[1];
-        const sourceNodeId = resourceMap.get(sourceVar);
-        if (sourceNodeId && sourceNodeId !== nodeId) {
-          if (!edges.some(e => e.source === sourceNodeId && e.target === nodeId)) {
-            edges.push({
-              id: `edge_${edges.length}`,
-              source: sourceNodeId,
-              target: nodeId,
-              animated: true,
-              style: { stroke: '#888', strokeWidth: 2 },
-            });
-          }
-        }
-      }
-    }
-  }
+  });
 
   if (nodes.length === 0) {
-    warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* or builder.add* patterns.');
+    warnings.push('No Aspire resources found in the file. Make sure the file contains builder.Add* or builder.add* patterns, including multiline fluent chains such as await builder\n  .addProject(...).');
   }
 
   return { nodes, edges, warnings };

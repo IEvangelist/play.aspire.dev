@@ -657,7 +657,15 @@ export default function AspirePlayground() {
     try {
       switch (type) {
         case 'apphost':
+          setAppHostLanguage('csharp');
+          setCodePreviewTab('apphost');
+          setCodePreviewCollapsed(false);
+          result = parseAppHost(content);
+          break;
         case 'apphost-ts':
+          setAppHostLanguage('typescript');
+          setCodePreviewTab('apphost');
+          setCodePreviewCollapsed(false);
           result = parseAppHost(content);
           break;
         case 'docker-compose':
@@ -697,7 +705,7 @@ export default function AspirePlayground() {
       console.error('Import error:', error);
       alert('Failed to parse the file. Please make sure it is a valid file.');
     }
-  }, [nodes.length, setNodes, setEdges]);
+  }, [nodes.length, setNodes, setEdges, setAppHostLanguage, setCodePreviewTab, setCodePreviewCollapsed]);
 
   const handleApplyTemplate = (template: Template) => {
     if (nodes.length > 0 && !confirm('This will replace your current canvas. Continue?')) {
